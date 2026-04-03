@@ -213,7 +213,7 @@ function Staff({ note, clef, boss = false }) {
   );
 }
 
-function SchoolPanel({ accuracy, speedFactor, level, soundOnDefault, setSoundOnDefault, showPrivacy, setShowPrivacy, onApplyDefaults, selectedPracticeNotes, setSelectedPracticeNotes }) {
+function SchoolPanel({ accuracy, speedFactor, level, soundOnDefault, setSoundOnDefault, showPrivacy, setShowPrivacy, onApplyDefaults, selectedPracticeNotes, setSelectedPracticeNotes, teacherSpeed, setTeacherSpeed }) {
   return (
     <div style={{ display: "grid", gap: 24 }}>
       <section style={{ ...styles.card, padding: 24 }}>
@@ -273,6 +273,31 @@ function SchoolPanel({ accuracy, speedFactor, level, soundOnDefault, setSoundOnD
               })}
             </div>
           </div>
+          <div style={{ ...styles.subCard, padding: 16 }}>
+            <div style={{ color: "rgba(255,255,255,0.9)", fontSize: 14, marginBottom: 10 }}>Teacher speed</div>
+            <div style={{ color: "rgba(255,255,255,0.8)", fontSize: 12, marginBottom: 10 }}>Slow down or speed up notes in the main game monitor.</div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {[
+                ["slow", "Slow"],
+                ["normal", "Normal"],
+                ["fast", "Fast"],
+              ].map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setTeacherSpeed(value)}
+                  style={{
+                    ...styles.ghostButton,
+                    padding: "8px 12px",
+                    background: teacherSpeed === value ? "rgba(103,232,249,0.22)" : "transparent",
+                    border: teacherSpeed === value ? "1px solid rgba(103,232,249,0.8)" : "1px solid rgba(255,255,255,0.20)"
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
       <section style={{ ...styles.card, padding: 24 }}>
@@ -312,6 +337,7 @@ export default function MusicInvadersApp() {
   const [showTeacherTools, setShowTeacherTools] = useState(false);
   const [stats, setStats] = useState({ shotsFired: 0, correctHits: 0 });
   const [selectedPracticeNotes, setSelectedPracticeNotes] = useState(["C","D","E","F","G","A","B"]);
+  const [teacherSpeed, setTeacherSpeed] = useState("normal");
   const [starsBg] = useState({ far: stars(18, 0.6, 1.5), mid: stars(24, 0.8, 2), near: stars(30, 1, 2.4) });
   const [cameraOffset, setCameraOffset] = useState({ x: 0, y: 0 });
   const [shootingStars, setShootingStars] = useState([]);
@@ -337,7 +363,8 @@ export default function MusicInvadersApp() {
   const accuracy = stats.shotsFired ? Math.round((stats.correctHits / stats.shotsFired) * 100) : 100;
   const speedFactor = accuracy >= 90 ? 1.08 : accuracy < 65 ? 0.88 : 1;
   const endlessRamp = levelKey === "endless" ? Math.min(2.2, 1 + endlessTime * 0.005) : 1;
-  const effectiveSpeed = level.speed * speedFactor * endlessRamp;
+  const teacherSpeedFactor = teacherSpeed === "slow" ? 0.8 : teacherSpeed === "fast" ? 1.25 : 1;
+  const effectiveSpeed = level.speed * speedFactor * endlessRamp * teacherSpeedFactor;
   const answers = levelKey === "easy" || levelKey === "medium" ? BASIC : ADVANCED;
   const leaderboard = [{ name: "Skye", score: 12 }, { name: "Arran", score: 10 }, { name: "Lewis", score: 8 }, { name: playerName || "Player", score }].sort((a, b) => b.score - a.score).slice(0, 5);
 
@@ -789,7 +816,7 @@ export default function MusicInvadersApp() {
             </section>
           </div>
 
-          <div style={{ display: "grid", gap: 12 }}><div style={{ display: "flex", justifyContent: "center" }}><button style={styles.ghostButton} onClick={() => setShowTeacherTools((v) => !v)}>{showTeacherTools ? "Hide teacher tools" : "Show teacher tools"}</button></div>{showTeacherTools && <SchoolPanel accuracy={accuracy} speedFactor={speedFactor} level={level} soundOnDefault={soundOnDefault} setSoundOnDefault={setSoundOnDefault} showPrivacy={showPrivacy} setShowPrivacy={setShowPrivacy} onApplyDefaults={applyTeacherDefaults} selectedPracticeNotes={selectedPracticeNotes} setSelectedPracticeNotes={setSelectedPracticeNotes} />}</div>
+          <div style={{ display: "grid", gap: 12 }}><div style={{ display: "flex", justifyContent: "center" }}><button style={styles.ghostButton} onClick={() => setShowTeacherTools((v) => !v)}>{showTeacherTools ? "Hide teacher tools" : "Show teacher tools"}</button></div>{showTeacherTools && <SchoolPanel accuracy={accuracy} speedFactor={speedFactor} level={level} soundOnDefault={soundOnDefault} setSoundOnDefault={setSoundOnDefault} showPrivacy={showPrivacy} setShowPrivacy={setShowPrivacy} onApplyDefaults={applyTeacherDefaults} selectedPracticeNotes={selectedPracticeNotes} setSelectedPracticeNotes={setSelectedPracticeNotes} teacherSpeed={teacherSpeed} setTeacherSpeed={setTeacherSpeed} />}</div>
         </div>
       </div>
     </div>
