@@ -103,23 +103,6 @@ function pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function normalizeAnswer(value) {
-  const raw = String(value || "").trim().replace(/♯/g, "#").replace(/♭/g, "b");
-  const enharmonic = {
-    "G#": "Ab",
-    "Ab": "G#",
-    "A#": "Bb",
-    "Bb": "A#",
-    "C#": "Db",
-    "Db": "C#",
-    "D#": "Eb",
-    "Eb": "D#",
-    "F#": "Gb",
-    "Gb": "F#",
-  };
-  return { raw, alt: enharmonic[raw] || raw };
-}
-
 function nextLevel(key) {
   const idx = LEVELS.findIndex((x) => x.key === key);
   if (idx < 0 || idx >= LEVELS.length - 2) return "boss";
@@ -205,25 +188,33 @@ function Staff({ note, clef, boss = false }) {
   const y = 22 + (note.line - 4) * 20;
   const color = NOTE_COLORS[note.label?.[0]] || "white";
   const stemUp = note.line >= 6;
+  const ledgerYs = [];
+  if (note.line < 4) {
+    for (let l = 4; l >= Math.ceil(note.line); l -= 1) {
+      if (Number.isInteger(l)) ledgerYs.push(22 - (4 - l) * 20);
+    }
+  }
+  if (note.line > 8) {
+    for (let l = 8; l <= Math.floor(note.line); l += 1) {
+      if (Number.isInteger(l)) ledgerYs.push(102 + (l - 8) * 20);
+    }
+  }
   return (
-    <div style={{ position: "relative", borderRadius: 18, background: "rgba(2,6,23,0.82)", padding: 12, height: boss ? 148 : 144 }}>
-      <div style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: boss ? 42 : 44 }}>{clef === "treble" ? "𝄞" : "𝄢"}</div>
-      <svg viewBox="0 0 300 124" style={{ width: "100%", height: "100%" }}>
+    <div style={{ position: "relative", borderRadius: 18, background: "rgba(2,6,23,0.82)", padding: 10, height: boss ? 158 : 144, overflow: "hidden" }}>
+      <div style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: boss ? 38 : 44 }}>{clef === "treble" ? "𝄞" : "𝄢"}</div>
+      <svg viewBox="0 -14 300 152" style={{ width: "100%", height: "100%", overflow: "visible" }}>
         {[22, 42, 62, 82, 102].map((line) => <line key={line} x1="58" x2="286" y1={line} y2={line} stroke="rgba(255,255,255,0.92)" strokeWidth="2.6" />)}
-        {note.line > 8 && <line x1="165" x2="245" y1={102} y2={102} stroke="white" strokeWidth="3.5" strokeLinecap="round" />}
-        {note.line >= 9 && <line x1="165" x2="245" y1={122} y2={122} stroke="white" strokeWidth="3.5" strokeLinecap="round" />}
-        {note.line < 4 && <line x1="165" x2="245" y1={22} y2={22} stroke="white" strokeWidth="3.5" strokeLinecap="round" />}
-        {note.line <= 3 && <line x1="165" x2="245" y1={2} y2={2} stroke="white" strokeWidth="3.5" strokeLinecap="round" />}
-        {note.accidental === "#" && <g transform={`translate(149 ${y - 18})`}><line x1="8" y1="0" x2="8" y2="36" stroke="#22c55e" strokeWidth="4.2" /><line x1="20" y1="0" x2="20" y2="36" stroke="#22c55e" strokeWidth="4.2" /><line x1="2" y1="12" x2="26" y2="8" stroke="#22c55e" strokeWidth="4.2" /><line x1="2" y1="26" x2="26" y2="22" stroke="#22c55e" strokeWidth="4.2" /></g>}
-        {note.accidental === "b" && <g transform={`translate(152 ${y - 18})`}><line x1="8" y1="0" x2="8" y2="35" stroke="#ff4d4f" strokeWidth="4.2" /><path d="M8 14 C18 8, 20 18, 8 21" fill="none" stroke="#ff4d4f" strokeWidth="4.2" /><path d="M8 22 C18 16, 20 26, 8 29" fill="none" stroke="#ff4d4f" strokeWidth="4.2" /></g>}
-        <ellipse cx="205" cy={y} rx={boss ? 20 : 20} ry={boss ? 13 : 13} fill={color} stroke="white" strokeWidth="2.2" transform={`rotate(-18 205 ${y})`} />
-        {stemUp ? <line x1="223" x2="223" y1={y} y2={Math.max(10, y - 42)} stroke={color} strokeWidth="4.2" /> : <line x1="187" x2="187" y1={y} y2={Math.min(114, y + 42)} stroke={color} strokeWidth="4.2" />}
+        {ledgerYs.map((ly, i) => <line key={`ledger-${i}`} x1="160" x2="250" y1={ly} y2={ly} stroke="white" strokeWidth="4" strokeLinecap="round" />)}
+        {note.accidental === "#" && <g transform={`translate(146 ${y - 18})`}><line x1="8" y1="0" x2="8" y2="36" stroke="#22c55e" strokeWidth="4.2" /><line x1="20" y1="0" x2="20" y2="36" stroke="#22c55e" strokeWidth="4.2" /><line x1="2" y1="12" x2="26" y2="8" stroke="#22c55e" strokeWidth="4.2" /><line x1="2" y1="26" x2="26" y2="22" stroke="#22c55e" strokeWidth="4.2" /></g>}
+        {note.accidental === "b" && <g transform={`translate(148 ${y - 18})`}><line x1="8" y1="0" x2="8" y2="35" stroke="#ff4d4f" strokeWidth="4.6" /><path d="M8 14 C18 8, 20 18, 8 21" fill="none" stroke="#ff4d4f" strokeWidth="4.6" /><path d="M8 22 C18 16, 20 26, 8 29" fill="none" stroke="#ff4d4f" strokeWidth="4.6" /></g>}
+        <ellipse cx="205" cy={y} rx={boss ? 19 : 20} ry={boss ? 12 : 13} fill={color} stroke="white" strokeWidth="2.2" transform={`rotate(-18 205 ${y})`} />
+        {stemUp ? <line x1="223" x2="223" y1={y} y2={Math.max(-6, y - 42)} stroke={color} strokeWidth="3.4" /> : <line x1="187" x2="187" y1={y} y2={Math.min(132, y + 42)} stroke={color} strokeWidth="3.4" />}
       </svg>
     </div>
   );
 }
 
-function SchoolPanel({ accuracy, speedFactor, level, soundOnDefault, setSoundOnDefault, showPrivacy, setShowPrivacy, onApplyDefaults }) {
+function SchoolPanel({ accuracy, speedFactor, level, soundOnDefault, setSoundOnDefault, showPrivacy, setShowPrivacy, onApplyDefaults, selectedPracticeNotes, setSelectedPracticeNotes }) {
   return (
     <div style={{ display: "grid", gap: 24 }}>
       <section style={{ ...styles.card, padding: 24 }}>
@@ -250,6 +241,40 @@ function SchoolPanel({ accuracy, speedFactor, level, soundOnDefault, setSoundOnD
               <button style={styles.button} onClick={() => setShowPrivacy((v) => !v)}>{showPrivacy ? "Privacy note on" : "Privacy note off"}</button>
             </div>
             <button style={{ ...styles.button, width: "100%", background: "#67e8f9" }} onClick={onApplyDefaults}>Apply teacher defaults</button>
+          </div>
+          <div style={{ ...styles.subCard, padding: 16 }}>
+            <div style={{ color: "rgba(255,255,255,0.9)", fontSize: 14, marginBottom: 10 }}>Practice notes</div>
+            <div style={{ color: "rgba(255,255,255,0.8)", fontSize: 12, marginBottom: 12 }}>Choose which notes appear for pupils.</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {ADVANCED.map((noteName) => {
+                const active = selectedPracticeNotes.includes(noteName);
+                return (
+                  <button
+                    key={noteName}
+                    type="button"
+                    onClick={() => setSelectedPracticeNotes((prev) => {
+                      const exists = prev.includes(noteName);
+                      if (exists) {
+                        const next = prev.filter((n) => n !== noteName);
+                        return next.length ? next : prev;
+                      }
+                      return [...prev, noteName];
+                    })}
+                    style={{
+                      background: active ? "white" : "transparent",
+                      color: active ? "#0f172a" : "white",
+                      border: "1px solid rgba(255,255,255,0.25)",
+                      borderRadius: 999,
+                      padding: "8px 12px",
+                      fontWeight: 700,
+                      cursor: "pointer"
+                    }}
+                  >
+                    {noteName}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
@@ -288,6 +313,7 @@ export default function MusicInvadersApp() {
   const [showTitleScreen, setShowTitleScreen] = useState(true);
   const [showPrivacy, setShowPrivacy] = useState(true);
   const [showTeacherTools, setShowTeacherTools] = useState(false);
+  const [selectedPracticeNotes, setSelectedPracticeNotes] = useState(() => [...ADVANCED]);
   const [stats, setStats] = useState({ shotsFired: 0, correctHits: 0 });
   const [starsBg] = useState({ far: stars(18, 0.6, 1.5), mid: stars(24, 0.8, 2), near: stars(30, 1, 2.4) });
   const [cameraOffset, setCameraOffset] = useState({ x: 0, y: 0 });
@@ -309,13 +335,21 @@ export default function MusicInvadersApp() {
   const cameraRef = useRef(null);
 
   const level = useMemo(() => LEVELS.find((item) => item.key === levelKey) || LEVELS[0], [levelKey]);
-  const questions = useMemo(() => getQuestions(levelKey, clefMode), [levelKey, clefMode]);
+  const questions = useMemo(() => {
+    const baseQuestions = getQuestions(levelKey, clefMode);
+    const filtered = baseQuestions.filter((q) => selectedPracticeNotes.includes(q.answer));
+    return filtered.length ? filtered : baseQuestions;
+  }, [levelKey, clefMode, selectedPracticeNotes]);
   const progress = levelKey === "boss" ? ((BOSS_HITS - bossHitsLeft) / BOSS_HITS) * 100 : levelKey === "endless" ? 0 : (score / level.target) * 100;
   const accuracy = stats.shotsFired ? Math.round((stats.correctHits / stats.shotsFired) * 100) : 100;
   const speedFactor = accuracy >= 90 ? 1.08 : accuracy < 65 ? 0.88 : 1;
   const endlessRamp = levelKey === "endless" ? Math.min(2.2, 1 + endlessTime * 0.005) : 1;
   const effectiveSpeed = level.speed * speedFactor * endlessRamp;
-  const answers = levelKey === "easy" || levelKey === "medium" ? BASIC : ADVANCED;
+  const answers = useMemo(() => {
+    const base = levelKey === "easy" || levelKey === "medium" ? BASIC : ADVANCED;
+    const filtered = base.filter((a) => selectedPracticeNotes.includes(a));
+    return filtered.length ? filtered : base;
+  }, [levelKey, selectedPracticeNotes]);
   const leaderboard = [{ name: "Skye", score: 12 }, { name: "Arran", score: 10 }, { name: "Lewis", score: 8 }, { name: playerName || "Player", score }].sort((a, b) => b.score - a.score).slice(0, 5);
 
   const nextQuestion = () => {
@@ -543,13 +577,7 @@ export default function MusicInvadersApp() {
           }
 
           if (hitShot) {
-            const shotAnswer = normalizeAnswer(hitShot.answer);
-            const correctAnswer = normalizeAnswer(inv.question.answer);
-            if (
-              shotAnswer.raw === correctAnswer.raw ||
-              shotAnswer.raw === correctAnswer.alt ||
-              shotAnswer.alt === correctAnswer.raw
-            ) {
+            if (hitShot.answer === inv.question.answer) {
               addExplosion(inv.lane, inv.y, "✓", true);
               pulseShake();
               setStats((p) => ({ ...p, correctHits: p.correctHits + 1 }));
@@ -772,7 +800,7 @@ export default function MusicInvadersApp() {
             </section>
           </div>
 
-          <section style={{ ...styles.card, padding: 18 }}><div style={{ display: "flex", justifyContent: "center" }}><button style={styles.ghostButton} onClick={() => setShowTeacherTools((v) => !v)}>{showTeacherTools ? "Hide teacher tools" : "Show teacher tools"}</button></div>{showTeacherTools && <div style={{ marginTop: 16 }}><SchoolPanel accuracy={accuracy} speedFactor={speedFactor} level={level} soundOnDefault={soundOnDefault} setSoundOnDefault={setSoundOnDefault} showPrivacy={showPrivacy} setShowPrivacy={setShowPrivacy} onApplyDefaults={applyTeacherDefaults} /></div>}</section>
+          <section style={{ ...styles.card, padding: 18 }}><div style={{ display: "flex", justifyContent: "center" }}><button style={styles.ghostButton} onClick={() => setShowTeacherTools((v) => !v)}>{showTeacherTools ? "Hide teacher tools" : "Show teacher tools"}</button></div>{showTeacherTools && <div style={{ marginTop: 16 }}><SchoolPanel accuracy={accuracy} speedFactor={speedFactor} level={level} soundOnDefault={soundOnDefault} setSoundOnDefault={setSoundOnDefault} showPrivacy={showPrivacy} setShowPrivacy={setShowPrivacy} onApplyDefaults={applyTeacherDefaults} selectedPracticeNotes={selectedPracticeNotes} setSelectedPracticeNotes={setSelectedPracticeNotes} /></div>}</section>
         </div>
       </div>
     </div>
