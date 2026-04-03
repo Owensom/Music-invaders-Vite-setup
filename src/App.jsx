@@ -173,6 +173,26 @@ function tone(type, freq, duration, volume) {
   osc.stop(now + duration + 0.02);
 }
 
+function normalizeAnswer(answer) {
+  const value = String(answer || "").trim().replace("♯", "#").replace("♭", "b");
+  const enharmonic = {
+    "Ab": "G#",
+    "Bb": "A#",
+    "Cb": "B",
+    "Db": "C#",
+    "Eb": "D#",
+    "Fb": "E",
+    "Gb": "F#",
+    "E#": "F",
+    "B#": "C",
+  };
+  return enharmonic[value] || value;
+}
+
+function answersMatch(left, right) {
+  return normalizeAnswer(left) === normalizeAnswer(right);
+}
+
 function beep(kind, scale = 1) {
   const map = {
     fire: ["square", 700, 0.05, 0.05],
@@ -334,7 +354,7 @@ export default function MusicInvadersApp() {
   const [message, setMessage] = useState("Match the note before it lands.");
   const [showTitleScreen, setShowTitleScreen] = useState(true);
   const [showPrivacy, setShowPrivacy] = useState(true);
-  const [showTeacherTools, setShowTeacherTools] = useState(false);
+  const [showTeacherTools, setShowTeacherTools] = useState(true);
   const [stats, setStats] = useState({ shotsFired: 0, correctHits: 0 });
   const [selectedPracticeNotes, setSelectedPracticeNotes] = useState(["C","D","E","F","G","A","B"]);
   const [teacherSpeed, setTeacherSpeed] = useState("normal");
@@ -593,7 +613,7 @@ export default function MusicInvadersApp() {
           }
 
           if (hitShot) {
-            if (hitShot.answer === inv.question.answer) {
+            if (answersMatch(hitShot.answer, inv.question.answer)) {
               addExplosion(inv.lane, inv.y, "✓", true);
               pulseShake();
               setStats((p) => ({ ...p, correctHits: p.correctHits + 1 }));
@@ -816,7 +836,35 @@ export default function MusicInvadersApp() {
             </section>
           </div>
 
-          <section style={{ ...styles.card, padding: 18 }}><div style={{ display: "flex", justifyContent: "center" }}><button style={styles.ghostButton} onClick={() => setShowTeacherTools((v) => !v)}>{showTeacherTools ? "Hide teacher tools" : "Show teacher tools"}</button></div>{showTeacherTools && <div style={{ marginTop: 16 }}><SchoolPanel accuracy={accuracy} speedFactor={speedFactor} level={level} soundOnDefault={soundOnDefault} setSoundOnDefault={setSoundOnDefault} showPrivacy={showPrivacy} setShowPrivacy={setShowPrivacy} onApplyDefaults={applyTeacherDefaults} selectedPracticeNotes={selectedPracticeNotes} setSelectedPracticeNotes={setSelectedPracticeNotes} teacherSpeed={teacherSpeed} setTeacherSpeed={setTeacherSpeed} /></div>}</section>
+          <section style={{ ...styles.card, padding: 18, marginTop: 8, position: "relative", zIndex: 5 }}>
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <button
+                type="button"
+                style={{ ...styles.ghostButton, minWidth: 240, pointerEvents: "auto" }}
+                onClick={() => setShowTeacherTools((v) => !v)}
+              >
+                {showTeacherTools ? "Hide teacher tools" : "Show teacher tools"}
+              </button>
+            </div>
+            {showTeacherTools && (
+              <div style={{ marginTop: 16 }}>
+                <SchoolPanel
+                  accuracy={accuracy}
+                  speedFactor={speedFactor}
+                  level={level}
+                  soundOnDefault={soundOnDefault}
+                  setSoundOnDefault={setSoundOnDefault}
+                  showPrivacy={showPrivacy}
+                  setShowPrivacy={setShowPrivacy}
+                  onApplyDefaults={applyTeacherDefaults}
+                  selectedPracticeNotes={selectedPracticeNotes}
+                  setSelectedPracticeNotes={setSelectedPracticeNotes}
+                  teacherSpeed={teacherSpeed}
+                  setTeacherSpeed={setTeacherSpeed}
+                />
+              </div>
+            )}
+          </section>
         </div>
       </div>
     </div>
