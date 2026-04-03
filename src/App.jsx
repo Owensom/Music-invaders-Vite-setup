@@ -188,94 +188,26 @@ function Staff({ note, clef, boss = false }) {
   const y = 22 + (note.line - 4) * 20;
   const color = NOTE_COLORS[note.label?.[0]] || "white";
   const stemUp = note.line >= 6;
+  const topLedgerLines = [];
+  for (let l = 8; l <= Math.floor(note.line); l += 1) {
+    topLedgerLines.push(102 + (l - 8) * 20);
+  }
+  const bottomLedgerLines = [];
+  for (let l = 4; l >= Math.ceil(note.line); l -= 1) {
+    bottomLedgerLines.push(22 - (4 - l) * 20);
+  }
   return (
-    <div style={{ position: "relative", borderRadius: 18, background: "rgba(2,6,23,0.82)", padding: 12, height: boss ? 176 : 144 }}>
-      <div style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: boss ? 52 : 44 }}>{clef === "treble" ? "𝄞" : "𝄢"}</div>
+    <div style={{ position: "relative", borderRadius: 18, background: "rgba(2,6,23,0.82)", padding: 12, height: boss ? 156 : 144 }}>
+      <div style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: boss ? 46 : 44 }}>{clef === "treble" ? "𝄞" : "𝄢"}</div>
       <svg viewBox="0 0 300 124" style={{ width: "100%", height: "100%" }}>
         {[22, 42, 62, 82, 102].map((line) => <line key={line} x1="58" x2="286" y1={line} y2={line} stroke="rgba(255,255,255,0.92)" strokeWidth="2.6" />)}
-        {[8, 9, 10, 11].map((l) =>
-          note.line >= l ? (
-            <line key={`ledger-top-${l}`} x1="185" x2="225" y1={102 + (l - 8) * 20} y2={102 + (l - 8) * 20} stroke="white" strokeWidth="2" />
-          ) : null
-        )}
-        {[4, 3, 2, 1].map((l) =>
-          note.line <= l ? (
-            <line key={`ledger-bottom-${l}`} x1="185" x2="225" y1={22 - (4 - l) * 20} y2={22 - (4 - l) * 20} stroke="white" strokeWidth="2" />
-          ) : null
-        )}
+        {topLedgerLines.map((ledgerY, i) => <line key={`top-${i}`} x1="185" x2="225" y1={ledgerY} y2={ledgerY} stroke="white" strokeWidth="2" />)}
+        {bottomLedgerLines.map((ledgerY, i) => <line key={`bottom-${i}`} x1="185" x2="225" y1={ledgerY} y2={ledgerY} stroke="white" strokeWidth="2" />)}
         {note.accidental === "#" && <g transform={`translate(149 ${y - 18})`}><line x1="8" y1="0" x2="8" y2="36" stroke="#22c55e" strokeWidth="3.4" /><line x1="20" y1="0" x2="20" y2="36" stroke="#22c55e" strokeWidth="3.4" /><line x1="2" y1="12" x2="26" y2="8" stroke="#22c55e" strokeWidth="3.4" /><line x1="2" y1="26" x2="26" y2="22" stroke="#22c55e" strokeWidth="3.4" /></g>}
         {note.accidental === "b" && <g transform={`translate(152 ${y - 18})`}><line x1="8" y1="0" x2="8" y2="35" stroke="#f87171" strokeWidth="3.4" /><path d="M8 14 C18 8, 20 18, 8 21" fill="none" stroke="#f87171" strokeWidth="3.4" /><path d="M8 22 C18 16, 20 26, 8 29" fill="none" stroke="#f87171" strokeWidth="3.4" /></g>}
-        <ellipse cx="205" cy={y} rx={boss ? 24 : 20} ry={boss ? 16 : 13} fill={color} stroke="white" strokeWidth="2.2" transform={`rotate(-18 205 ${y})`} />
+        <ellipse cx="205" cy={y} rx={boss ? 20 : 20} ry={boss ? 13 : 13} fill={color} stroke="white" strokeWidth="2.2" transform={`rotate(-18 205 ${y})`} />
         {stemUp ? <line x1="223" x2="223" y1={y} y2={Math.max(10, y - 42)} stroke={color} strokeWidth="3.4" /> : <line x1="187" x2="187" y1={y} y2={Math.min(114, y + 42)} stroke={color} strokeWidth="3.4" />}
       </svg>
-    </div>
-  );
-
-
-function PianoKeyboard({ onPress, availableNotes }) {
-  const whiteKeys = ["C", "D", "E", "F", "G", "A", "B"];
-  const blackKeys = [
-    { note: "C#", left: "12.5%" },
-    { note: "D#", left: "26.5%" },
-    { note: "F#", left: "55.5%" },
-    { note: "G#", left: "69.5%" },
-    { note: "A#", left: "83.5%" },
-  ];
-  return (
-    <div style={{ display: "flex", justifyContent: "center", marginTop: 8 }}>
-      <div style={{ position: "relative", width: "min(820px, 100%)", height: 190 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", height: "100%", gap: 2 }}>
-          {whiteKeys.map((note) => {
-            const active = availableNotes.includes(note);
-            return (
-              <button
-                key={note}
-                onClick={() => active && onPress(note)}
-                style={{
-                  border: "1px solid rgba(15,23,42,0.55)",
-                  borderRadius: "0 0 14px 14px",
-                  background: active ? "linear-gradient(180deg, #ffffff, #e5eefb)" : "#d1d5db",
-                  color: "#0f172a",
-                  fontWeight: 800,
-                  fontSize: 18,
-                  cursor: active ? "pointer" : "default",
-                  boxShadow: active ? "0 8px 20px rgba(0,0,0,0.18)" : "none",
-                }}
-              >
-                {note}
-              </button>
-            );
-          })}
-        </div>
-        {blackKeys.map(({ note, left }) => {
-          const active = availableNotes.includes(note);
-          return (
-            <button
-              key={note}
-              onClick={() => active && onPress(note)}
-              style={{
-                position: "absolute",
-                top: 0,
-                left,
-                transform: "translateX(-50%)",
-                width: "8.8%",
-                height: 110,
-                border: "1px solid rgba(255,255,255,0.12)",
-                borderRadius: "0 0 10px 10px",
-                background: active ? "linear-gradient(180deg, #111827, #000000)" : "#1f2937",
-                color: "white",
-                fontWeight: 700,
-                fontSize: 13,
-                cursor: active ? "pointer" : "default",
-                boxShadow: active ? "0 10px 20px rgba(0,0,0,0.35)" : "none",
-                zIndex: 2,
-              }}
-            >
-              {active ? note : ""}
-            </button>
-          );
-        })}
-      </div>
     </div>
   );
 }
@@ -337,8 +269,8 @@ export default function MusicInvadersApp() {
   const [invaders, setInvaders] = useState([]);
   const [explosions, setExplosions] = useState([]);
   const [bossHitsLeft, setBossHitsLeft] = useState(BOSS_HITS);
-  const [soundOn, setSoundOn] = useState(false);
-  const [soundOnDefault, setSoundOnDefault] = useState(false);
+  const [soundOn, setSoundOn] = useState(true);
+  const [soundOnDefault, setSoundOnDefault] = useState(true);
   const [playerName, setPlayerName] = useState("Player 1");
   const [classMode, setClassMode] = useState(true);
   const [message, setMessage] = useState("Match the note before it lands.");
@@ -413,18 +345,6 @@ export default function MusicInvadersApp() {
     setMessage("Teacher defaults applied.");
   };
 
-  const toggleSound = async () => {
-    const next = !soundOn;
-    if (next) {
-      const ctx = getAudioContext();
-      if (ctx && ctx.state === "suspended") {
-        try { await ctx.resume(); } catch {}
-      }
-    }
-    setSoundOn(next);
-    setMessage(next ? "Sound on." : "Sound off.");
-  };
-
   const openFullscreen = async () => {
     try {
       const el = document.documentElement;
@@ -494,10 +414,10 @@ export default function MusicInvadersApp() {
     setSoundOn(soundOnDefault);
   };
 
-  const startGame = async () => {
+  const startGame = () => {
     const ctx = getAudioContext();
     if (ctx && ctx.state === "suspended") {
-      try { await ctx.resume(); } catch {}
+      ctx.resume().catch(() => {});
     }
     clearTimers();
     resetBoard(!preserveLivesOnStart);
@@ -506,6 +426,7 @@ export default function MusicInvadersApp() {
     setShowTitleScreen(false);
     setMessage(levelKey === "boss" ? "Boss battle. Hit the mega note five times." : "Game on. Read carefully and fire the correct answer.");
     startMusic();
+    beep("fire", 0.4);
   };
 
   const addExplosion = (lane, y, label, success) => {
@@ -765,7 +686,12 @@ export default function MusicInvadersApp() {
                   <p style={{ color: "rgba(255,255,255,0.9)", marginTop: 8 }}>Space-invaders style music reading practice.</p>
                 </div>
                 <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                  <button style={styles.ghostButton} onClick={toggleSound}>{soundOn ? "🔊 Sound on" : "🔈 Sound off"}</button>
+                  <button style={styles.ghostButton} onClick={() => {
+                    const ctx = getAudioContext();
+                    if (ctx && ctx.state === "suspended") ctx.resume().catch(() => {});
+                    setSoundOn((v) => !v);
+                    beep("fire", 0.25);
+                  }}>{soundOn ? "🔊 Sound on" : "🔈 Sound off"}</button>
                   <button style={styles.ghostButton} onClick={openFullscreen}>⛶ Fullscreen</button>
                   <button style={styles.button} onClick={startGame}>🚀 {gameState === "playing" ? "Restart game" : "Start mission"}</button>
                   <button style={styles.ghostButton} onClick={resetGame}>↺ Reset</button>
@@ -778,9 +704,9 @@ export default function MusicInvadersApp() {
                     <div>{levelKey === "boss" ? `Boss health: ${bossHitsLeft}/${BOSS_HITS}` : levelKey === "endless" ? `Endless mode · ${endlessTime}s · speed x${endlessRamp.toFixed(2)}` : `Target score: ${level.target}`}</div>
                     <div>{level.maxInvaders === 1 ? "One note at a time" : "Maximum two notes at a time"}</div>
                   </div>
-                  <div style={{ position: "relative", height: 480, overflow: "hidden", borderRadius: 24, border: "1px solid rgba(255,255,255,0.12)", background: "radial-gradient(circle at 50% 20%, rgba(56,189,248,0.25), transparent 30%), radial-gradient(circle at 80% 0%, rgba(168,85,247,0.25), transparent 30%), linear-gradient(180deg, rgba(15,23,42,1), rgba(2,6,23,1))", transform: shake ? "translateX(4px)" : "translateX(0)", transition: "transform 0.08s ease" }}>
+                  <div style={{ position: "relative", height: 560, overflow: "hidden", borderRadius: 24, border: "1px solid rgba(255,255,255,0.12)", background: "radial-gradient(circle at 50% 20%, rgba(56,189,248,0.25), transparent 30%), radial-gradient(circle at 80% 0%, rgba(168,85,247,0.25), transparent 30%), linear-gradient(180deg, rgba(15,23,42,1), rgba(2,6,23,1))", transform: shake ? "translateX(4px)" : "translateX(0)", transition: "transform 0.08s ease" }}>
                     {Array.from({ length: LANES }).map((_, i) => <div key={i} style={{ position: "absolute", top: 0, height: "100%", left: `${10 + i * 18}%`, width: "18%", borderLeft: "1px dashed rgba(255,255,255,0.12)" }} />)}
-                    {invaders.map((inv) => <div key={inv.id} style={{ position: "absolute", top: `${inv.y}%`, left: `${inv.isBoss ? 31 : LANE_LEFT[inv.lane]}%`, width: inv.isBoss ? "38%" : "18%" }}><div style={{ borderRadius: 24, border: inv.isBoss ? "1px solid rgba(252,211,77,0.55)" : "1px solid rgba(232,121,249,0.4)", padding: 12, background: inv.isBoss ? "rgba(245,158,11,0.10)" : "rgba(217,70,239,0.10)", boxShadow: "0 8px 24px rgba(0,0,0,0.25)" }}><Staff note={inv.question.display} clef={inv.question.clef} boss={Boolean(inv.isBoss)} /><div style={{ marginTop: 10, textAlign: "center", textTransform: "uppercase", letterSpacing: 3, color: inv.isBoss ? "#fde68a" : "#f0abfc", fontSize: inv.isBoss ? 14 : 12 }}>{inv.isBoss ? `${inv.question.clef} clef · ${inv.hp} hits left` : `${inv.question.clef} clef`}</div></div></div>)}
+                    {invaders.map((inv) => <div key={inv.id} style={{ position: "absolute", top: `${inv.y}%`, left: `${inv.isBoss ? 31 : LANE_LEFT[inv.lane]}%`, width: inv.isBoss ? "28%" : "18%" }}><div style={{ borderRadius: 24, border: inv.isBoss ? "1px solid rgba(252,211,77,0.55)" : "1px solid rgba(232,121,249,0.4)", padding: 12, background: inv.isBoss ? "rgba(245,158,11,0.10)" : "rgba(217,70,239,0.10)", boxShadow: "0 8px 24px rgba(0,0,0,0.25)" }}><Staff note={inv.question.display} clef={inv.question.clef} boss={Boolean(inv.isBoss)} /><div style={{ marginTop: 10, textAlign: "center", textTransform: "uppercase", letterSpacing: 3, color: inv.isBoss ? "#fde68a" : "#f0abfc", fontSize: inv.isBoss ? 14 : 12 }}>{inv.isBoss ? `${inv.question.clef} clef · ${inv.hp} hits left` : `${inv.question.clef} clef`}</div></div></div>)}
                     {shots.map((shot) => <div key={shot.id} style={{ position: "absolute", top: `${shot.y}%`, left: `${SHIP_LEFT[shot.lane]}%`, width: 40, height: 48, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 999, background: "#34d399", color: "#0f172a", fontWeight: 900, boxShadow: "0 10px 20px rgba(0,0,0,0.25)" }}>{shot.answer}</div>)}
                     {explosions.map((b) => <div key={b.id} style={{ position: "absolute", left: `${SHIP_LEFT[b.lane] + 1}%`, top: `${b.y}%`, width: 64, height: 64, transform: "translate(-50%,-50%)", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 999, border: b.success ? "1px solid rgba(134,239,172,0.7)" : "1px solid rgba(253,164,175,0.7)", background: b.success ? "rgba(74,222,128,0.25)" : "rgba(251,113,133,0.25)", color: b.success ? "#dcfce7" : "#ffe4e6", fontSize: 26, fontWeight: 900 }}>{b.label}</div>)}
                     <div style={{ position: "absolute", bottom: 8, left: `${50 + (shipLane - 2) * 18}%`, transform: "translateX(-50%)" }}>
@@ -790,13 +716,9 @@ export default function MusicInvadersApp() {
                   </div>
                 </div>
 
-                {levelKey === "hard" ? (
-                  <PianoKeyboard onPress={fireAnswer} availableNotes={answers} />
-                ) : (
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
-                    {answers.map((a) => <button key={a} style={styles.button} onClick={() => fireAnswer(a)}>{a}</button>)}
-                  </div>
-                )}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
+                  {answers.map((a) => <button key={a} style={styles.button} onClick={() => fireAnswer(a)}>{a}</button>)}
+                </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "0.34fr 0.66fr", gap: 16 }}>
                   <section style={{ ...styles.card, padding: 20 }}>
