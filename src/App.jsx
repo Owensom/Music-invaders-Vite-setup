@@ -193,14 +193,14 @@ function Staff({ note, clef, boss = false }) {
       <div style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: boss ? 52 : 44 }}>{clef === "treble" ? "𝄞" : "𝄢"}</div>
       <svg viewBox="0 0 300 124" style={{ width: "100%", height: "100%" }}>
         {[22, 42, 62, 82, 102].map((line) => <line key={line} x1="58" x2="286" y1={line} y2={line} stroke="rgba(255,255,255,0.92)" strokeWidth="2.6" />)}
-        {note.line > 8 && <line x1="185" x2="225" y1={102} y2={102} stroke="white" strokeWidth="2" />}
-        {note.line >= 9 && <line x1="185" x2="225" y1={122} y2={122} stroke="white" strokeWidth="2" />}
-        {note.line < 4 && <line x1="185" x2="225" y1={22} y2={22} stroke="white" strokeWidth="2" />}
-        {note.line <= 3 && <line x1="185" x2="225" y1={2} y2={2} stroke="white" strokeWidth="2" />}
-        {note.accidental === "#" && <g transform={`translate(149 ${y - 18})`}><line x1="8" y1="0" x2="8" y2="36" stroke="#22c55e" strokeWidth="3.4" /><line x1="20" y1="0" x2="20" y2="36" stroke="#22c55e" strokeWidth="3.4" /><line x1="2" y1="12" x2="26" y2="8" stroke="#22c55e" strokeWidth="3.4" /><line x1="2" y1="26" x2="26" y2="22" stroke="#22c55e" strokeWidth="3.4" /></g>}
-        {note.accidental === "b" && <g transform={`translate(152 ${y - 18})`}><line x1="8" y1="0" x2="8" y2="35" stroke="#f87171" strokeWidth="3.4" /><path d="M8 14 C18 8, 20 18, 8 21" fill="none" stroke="#f87171" strokeWidth="3.4" /><path d="M8 22 C18 16, 20 26, 8 29" fill="none" stroke="#f87171" strokeWidth="3.4" /></g>}
+        {note.line > 8 && <line x1="165" x2="245" y1={102} y2={102} stroke="white" strokeWidth="3.5" strokeLinecap="round" />}
+        {note.line >= 9 && <line x1="165" x2="245" y1={122} y2={122} stroke="white" strokeWidth="3.5" strokeLinecap="round" />}
+        {note.line < 4 && <line x1="165" x2="245" y1={22} y2={22} stroke="white" strokeWidth="3.5" strokeLinecap="round" />}
+        {note.line <= 3 && <line x1="165" x2="245" y1={2} y2={2} stroke="white" strokeWidth="3.5" strokeLinecap="round" />}
+        {note.accidental === "#" && <g transform={`translate(149 ${y - 18})`}><line x1="8" y1="0" x2="8" y2="36" stroke="#22c55e" strokeWidth="4.2" /><line x1="20" y1="0" x2="20" y2="36" stroke="#22c55e" strokeWidth="4.2" /><line x1="2" y1="12" x2="26" y2="8" stroke="#22c55e" strokeWidth="4.2" /><line x1="2" y1="26" x2="26" y2="22" stroke="#22c55e" strokeWidth="4.2" /></g>}
+        {note.accidental === "b" && <g transform={`translate(152 ${y - 18})`}><line x1="8" y1="0" x2="8" y2="35" stroke="#ff4d4f" strokeWidth="4.2" /><path d="M8 14 C18 8, 20 18, 8 21" fill="none" stroke="#ff4d4f" strokeWidth="4.2" /><path d="M8 22 C18 16, 20 26, 8 29" fill="none" stroke="#ff4d4f" strokeWidth="4.2" /></g>}
         <ellipse cx="205" cy={y} rx={boss ? 24 : 20} ry={boss ? 16 : 13} fill={color} stroke="white" strokeWidth="2.2" transform={`rotate(-18 205 ${y})`} />
-        {stemUp ? <line x1="223" x2="223" y1={y} y2={Math.max(10, y - 42)} stroke={color} strokeWidth="3.4" /> : <line x1="187" x2="187" y1={y} y2={Math.min(114, y + 42)} stroke={color} strokeWidth="3.4" />}
+        {stemUp ? <line x1="223" x2="223" y1={y} y2={Math.max(10, y - 42)} stroke={color} strokeWidth="4.2" /> : <line x1="187" x2="187" y1={y} y2={Math.min(114, y + 42)} stroke={color} strokeWidth="4.2" />}
       </svg>
     </div>
   );
