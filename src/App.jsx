@@ -103,6 +103,23 @@ function pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+function normalizeAnswer(value) {
+  const raw = String(value || "").trim().replace(/♯/g, "#").replace(/♭/g, "b");
+  const enharmonic = {
+    "G#": "Ab",
+    "Ab": "G#",
+    "A#": "Bb",
+    "Bb": "A#",
+    "C#": "Db",
+    "Db": "C#",
+    "D#": "Eb",
+    "Eb": "D#",
+    "F#": "Gb",
+    "Gb": "F#",
+  };
+  return { raw, alt: enharmonic[raw] || raw };
+}
+
 function nextLevel(key) {
   const idx = LEVELS.findIndex((x) => x.key === key);
   if (idx < 0 || idx >= LEVELS.length - 2) return "boss";
@@ -526,7 +543,13 @@ export default function MusicInvadersApp() {
           }
 
           if (hitShot) {
-            if (hitShot.answer === inv.question.answer) {
+            const shotAnswer = normalizeAnswer(hitShot.answer);
+            const correctAnswer = normalizeAnswer(inv.question.answer);
+            if (
+              shotAnswer.raw === correctAnswer.raw ||
+              shotAnswer.raw === correctAnswer.alt ||
+              shotAnswer.alt === correctAnswer.raw
+            ) {
               addExplosion(inv.lane, inv.y, "✓", true);
               pulseShake();
               setStats((p) => ({ ...p, correctHits: p.correctHits + 1 }));
