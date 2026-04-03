@@ -47,34 +47,37 @@ const styles = {
   shell: { maxWidth: 1440, margin: "0 auto", padding: 24 },
   grid: { display: "grid", gridTemplateColumns: "1.4fr 0.8fr", gap: 24, alignItems: "start" },
   card: {
-    background: "rgba(15,23,42,0.78)",
-    border: "1px solid rgba(255,255,255,0.12)",
+    background: "linear-gradient(180deg, rgba(15,23,42,0.88), rgba(2,6,23,0.82))",
+    border: "1px solid rgba(255,255,255,0.14)",
     borderRadius: 28,
-    boxShadow: "0 18px 60px rgba(0,0,0,0.35)",
-    backdropFilter: "blur(10px)",
+    boxShadow: "0 22px 70px rgba(0,0,0,0.38)",
+    backdropFilter: "blur(12px)",
   },
   subCard: {
-    background: "rgba(15,23,42,0.88)",
-    border: "1px solid rgba(255,255,255,0.10)",
+    background: "linear-gradient(180deg, rgba(15,23,42,0.92), rgba(2,6,23,0.82))",
+    border: "1px solid rgba(255,255,255,0.12)",
     borderRadius: 22,
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)",
   },
   button: {
-    background: "white",
+    background: "linear-gradient(180deg, #ffffff, #dbeafe)",
     color: "#0f172a",
     border: "none",
     borderRadius: 16,
-    padding: "10px 14px",
-    fontWeight: 700,
+    padding: "11px 16px",
+    fontWeight: 800,
     cursor: "pointer",
+    boxShadow: "0 10px 24px rgba(0,0,0,0.18)",
   },
   ghostButton: {
-    background: "transparent",
+    background: "rgba(255,255,255,0.03)",
     color: "white",
-    border: "1px solid rgba(255,255,255,0.20)",
+    border: "1px solid rgba(255,255,255,0.22)",
     borderRadius: 16,
-    padding: "10px 14px",
+    padding: "11px 16px",
     fontWeight: 700,
     cursor: "pointer",
+    boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
   },
   input: {
     width: "100%",
@@ -216,8 +219,8 @@ function Staff({ note, clef, boss = false }) {
   const color = NOTE_COLORS[note.label?.[0]] || "white";
   const stemUp = note.line >= 6;
   return (
-    <div style={{ position: "relative", borderRadius: 18, background: "rgba(2,6,23,0.82)", padding: 12, height: boss ? 148 : 144 }}>
-      <div style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: boss ? 42 : 44 }}>{clef === "treble" ? "𝄞" : "𝄢"}</div>
+    <div style={{ position: "relative", borderRadius: 18, background: "rgba(2,6,23,0.82)", padding: 12, height: boss ? 140 : 144 }}>
+      <div style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: boss ? 38 : 44 }}>{clef === "treble" ? "𝄞" : "𝄢"}</div>
       <svg viewBox="0 0 300 124" style={{ width: "100%", height: "100%" }}>
         {[22, 42, 62, 82, 102].map((line) => <line key={line} x1="58" x2="286" y1={line} y2={line} stroke="rgba(255,255,255,0.92)" strokeWidth="2.6" />)}
         {note.line > 8 && <line x1="165" x2="245" y1={102} y2={102} stroke="white" strokeWidth="3.5" strokeLinecap="round" />}
@@ -226,7 +229,7 @@ function Staff({ note, clef, boss = false }) {
         {note.line <= 3 && <line x1="165" x2="245" y1={2} y2={2} stroke="white" strokeWidth="3.5" strokeLinecap="round" />}
         {note.accidental === "#" && <g transform={`translate(149 ${y - 18})`}><line x1="8" y1="0" x2="8" y2="36" stroke="#22c55e" strokeWidth="4.2" /><line x1="20" y1="0" x2="20" y2="36" stroke="#22c55e" strokeWidth="4.2" /><line x1="2" y1="12" x2="26" y2="8" stroke="#22c55e" strokeWidth="4.2" /><line x1="2" y1="26" x2="26" y2="22" stroke="#22c55e" strokeWidth="4.2" /></g>}
         {note.accidental === "b" && <g transform={`translate(152 ${y - 18})`}><line x1="8" y1="0" x2="8" y2="35" stroke="#ff4d4f" strokeWidth="4.2" /><path d="M8 14 C18 8, 20 18, 8 21" fill="none" stroke="#ff4d4f" strokeWidth="4.2" /><path d="M8 22 C18 16, 20 26, 8 29" fill="none" stroke="#ff4d4f" strokeWidth="4.2" /></g>}
-        <ellipse cx="205" cy={y} rx={boss ? 20 : 20} ry={boss ? 13 : 13} fill={color} stroke="white" strokeWidth="2.2" transform={`rotate(-18 205 ${y})`} />
+        <ellipse cx="205" cy={y} rx={boss ? 18 : 20} ry={boss ? 12 : 13} fill={color} stroke="white" strokeWidth="2.2" transform={`rotate(-18 205 ${y})`} />
         {stemUp ? <line x1="223" x2="223" y1={y} y2={Math.max(10, y - 42)} stroke={color} strokeWidth="4.2" /> : <line x1="187" x2="187" y1={y} y2={Math.min(114, y + 42)} stroke={color} strokeWidth="4.2" />}
       </svg>
     </div>
@@ -761,6 +764,18 @@ export default function MusicInvadersApp() {
               </div>
 
               <div style={{ display: "grid", gap: 16, marginTop: 16 }}>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  {[
+                    `Mode: ${level.label}`,
+                    `Clef: ${clefMode === "both" ? "Both" : clefMode[0].toUpperCase() + clefMode.slice(1)}`,
+                    `Lives: ${lives}`,
+                    `Best: ${bestScore}`
+                  ].map((chip) => (
+                    <div key={chip} style={{ padding: "7px 12px", borderRadius: 999, background: "rgba(103,232,249,0.12)", border: "1px solid rgba(103,232,249,0.30)", color: "#cffafe", fontSize: 13, fontWeight: 700 }}>
+                      {chip}
+                    </div>
+                  ))}
+                </div>
                 <div style={{ ...styles.subCard, padding: 16 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 12, color: "rgba(255,255,255,0.9)", fontSize: 14, marginBottom: 12 }}>
                     <div>{levelKey === "boss" ? `Boss health: ${bossHitsLeft}/${BOSS_HITS}` : levelKey === "endless" ? `Endless mode · ${endlessTime}s · speed x${endlessRamp.toFixed(2)}` : levelKey === "teacher" ? `Teacher Set · target ${level.target}` : `Target score: ${level.target}`}</div>
@@ -825,10 +840,13 @@ export default function MusicInvadersApp() {
                   </div>
                 </div>
 
-                <div style={{ ...styles.subCard, padding: 16, display: "flex", justifyContent: "space-between", gap: 16, alignItems: "start" }}>
-                  <div>
+                <div style={{ ...styles.subCard, padding: 14, display: "flex", justifyContent: "space-between", gap: 16, alignItems: "center", background: gameState === "won" ? "linear-gradient(180deg, rgba(34,197,94,0.20), rgba(2,6,23,0.82))" : gameState === "lost" ? "linear-gradient(180deg, rgba(244,63,94,0.20), rgba(2,6,23,0.82))" : undefined }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: 3, color: "#67e8f9" }}>Feedback</div>
-                    <div style={{ marginTop: 8, color: "#fff" }}>{message}</div>
+                    <div style={{ color: "#fff" }}>{message}</div>
+                    <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 12 }}>
+                      {gameState === "playing" ? "Tip: use answer buttons or keyboard letters while moving with left/right arrows." : gameState === "won" ? "Mission complete — restart to play again or choose a different mode." : gameState === "lost" ? "Reset or restart when you are ready for another round." : "Adjust level, clef, or teacher tools before starting."}
+                    </div>
                   </div>
                   <button style={styles.ghostButton} onClick={speak}>🔊 Read aloud</button>
                 </div>
@@ -864,6 +882,9 @@ export default function MusicInvadersApp() {
                 />
               </div>
             )}
+            <div style={{ marginTop: 14, textAlign: "center", color: "rgba(255,255,255,0.62)", fontSize: 12 }}>
+              Classroom build • large monitor • teacher tools • boss mode • endless mode
+            </div>
           </section>
         </div>
       </div>
