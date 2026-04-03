@@ -21,6 +21,7 @@ const LEVELS = [
 const NOTE_COLORS = { C: "#ef4444", D: "#f97316", E: "#fde047", F: "#22c55e", G: "#38bdf8", A: "#3b82f6", B: "#a855f7" };
 const BASIC = ["A", "B", "C", "D", "E", "F", "G"];
 const ADVANCED = ["A", "B", "C", "D", "E", "F", "G", "A#", "C#", "D#", "F#", "G#", "Bb", "Eb", "Ab"];
+const LEADERBOARD_KEY = "music-invaders-class-leaderboard-v1";
 
 const NOTES = {
   treble: [
@@ -43,8 +44,8 @@ const styles = {
       "radial-gradient(circle at 20% 30%, rgba(56,189,248,0.16), transparent 35%), radial-gradient(circle at 80% 20%, rgba(168,85,247,0.2), transparent 35%), radial-gradient(ellipse at bottom, #162138 0%, #020617 72%)",
     fontFamily: "Inter, Arial, sans-serif",
   },
-  shell: { maxWidth: 1540, margin: "0 auto", padding: 20 },
-  grid: { display: "grid", gridTemplateColumns: "1fr", gap: 24, alignItems: "start" },
+  shell: { maxWidth: 1480, margin: "0 auto", padding: 20 },
+  grid: { display: "grid", gridTemplateColumns: "1.4fr 0.8fr", gap: 24, alignItems: "start" },
   card: {
     background: "rgba(15,23,42,0.78)",
     border: "1px solid rgba(255,255,255,0.12)",
@@ -193,10 +194,8 @@ function Staff({ note, clef, boss = false }) {
       <div style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: boss ? 52 : 44 }}>{clef === "treble" ? "𝄞" : "𝄢"}</div>
       <svg viewBox="0 0 300 124" style={{ width: "100%", height: "100%" }}>
         {[22, 42, 62, 82, 102].map((line) => <line key={line} x1="58" x2="286" y1={line} y2={line} stroke="rgba(255,255,255,0.92)" strokeWidth="2.6" />)}
-        {note.line > 8 && <line x1="185" x2="225" y1={102} y2={102} stroke="white" strokeWidth="2" />}
-        {note.line >= 9 && <line x1="185" x2="225" y1={122} y2={122} stroke="white" strokeWidth="2" />}
-        {note.line < 4 && <line x1="185" x2="225" y1={22} y2={22} stroke="white" strokeWidth="2" />}
-        {note.line <= 3 && <line x1="185" x2="225" y1={2} y2={2} stroke="white" strokeWidth="2" />}
+        {[8, 9, 10].map((l) => note.line >= l ? <line key={`top-${l}`} x1="185" x2="225" y1={102 + (l - 8) * 20} y2={102 + (l - 8) * 20} stroke="white" strokeWidth="2" /> : null)}
+        {[4, 3, 2].map((l) => note.line <= l ? <line key={`bottom-${l}`} x1="185" x2="225" y1={22 - (4 - l) * 20} y2={22 - (4 - l) * 20} stroke="white" strokeWidth="2" /> : null)}
         {note.accidental === "#" && <g transform={`translate(149 ${y - 18})`}><line x1="8" y1="0" x2="8" y2="36" stroke="#22c55e" strokeWidth="3.4" /><line x1="20" y1="0" x2="20" y2="36" stroke="#22c55e" strokeWidth="3.4" /><line x1="2" y1="12" x2="26" y2="8" stroke="#22c55e" strokeWidth="3.4" /><line x1="2" y1="26" x2="26" y2="22" stroke="#22c55e" strokeWidth="3.4" /></g>}
         {note.accidental === "b" && <g transform={`translate(152 ${y - 18})`}><line x1="8" y1="0" x2="8" y2="35" stroke="#f87171" strokeWidth="3.4" /><path d="M8 14 C18 8, 20 18, 8 21" fill="none" stroke="#f87171" strokeWidth="3.4" /><path d="M8 22 C18 16, 20 26, 8 29" fill="none" stroke="#f87171" strokeWidth="3.4" /></g>}
         <ellipse cx="205" cy={y} rx={boss ? 24 : 20} ry={boss ? 16 : 13} fill={color} stroke="white" strokeWidth="2.2" transform={`rotate(-18 205 ${y})`} />
@@ -250,6 +249,42 @@ function SchoolPanel({ accuracy, speedFactor, level, soundOnDefault, setSoundOnD
   );
 }
 
+
+function PianoKeyboard({ useAdvanced, onFire }) {
+  const white = useAdvanced ? ["C","D","E","F","G","A","B"] : BASIC;
+  const black = [
+    { note: "C#", left: 11 },
+    { note: "D#", left: 25 },
+    { note: "F#", left: 54 },
+    { note: "G#", left: 68 },
+    { note: "A#", left: 82 },
+  ];
+  const flats = ["Bb","Eb","Ab"];
+  return (
+    <div style={{ display: "grid", gap: 10 }}>
+      <div style={{ position: "relative", width: "100%", maxWidth: 560, margin: "0 auto", height: 180 }}>
+        <div style={{ display: "grid", gridTemplateColumns: `repeat(${white.length}, 1fr)`, gap: 4, height: "100%" }}>
+          {white.map((note) => (
+            <button key={note} onClick={() => onFire(note)} style={{ borderRadius: 14, border: "1px solid rgba(15,23,42,0.35)", background: "white", color: "#0f172a", fontWeight: 800, fontSize: 18, cursor: "pointer", boxShadow: "0 8px 20px rgba(0,0,0,0.18)" }}>
+              {note}
+            </button>
+          ))}
+        </div>
+        {useAdvanced && black.map((item) => (
+          <button key={item.note} onClick={() => onFire(item.note)} style={{ position: "absolute", top: 0, left: `${item.left}%`, transform: "translateX(-50%)", width: "10%", height: "58%", borderRadius: 12, border: "1px solid rgba(255,255,255,0.12)", background: "#111827", color: "white", fontWeight: 800, cursor: "pointer", boxShadow: "0 8px 20px rgba(0,0,0,0.35)" }}>
+            {item.note}
+          </button>
+        ))}
+      </div>
+      {useAdvanced && (
+        <div style={{ display: "flex", justifyContent: "center", gap: 8, flexWrap: "wrap" }}>
+          {flats.map((note) => <button key={note} onClick={() => onFire(note)} style={{ ...styles.button, background: "#e2e8f0" }}>{note}</button>)}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function MusicInvadersApp() {
   const [levelKey, setLevelKey] = useState("easy");
   const [clefMode, setClefMode] = useState("treble");
@@ -267,10 +302,12 @@ export default function MusicInvadersApp() {
   const [soundOnDefault, setSoundOnDefault] = useState(false);
   const [playerName, setPlayerName] = useState("Player 1");
   const [classMode, setClassMode] = useState(true);
-  const [showTeacherPanel, setShowTeacherPanel] = useState(false);
   const [message, setMessage] = useState("Match the note before it lands.");
   const [showTitleScreen, setShowTitleScreen] = useState(true);
   const [showPrivacy, setShowPrivacy] = useState(true);
+  const [showTeacherPanel, setShowTeacherPanel] = useState(false);
+  const [inputMode, setInputMode] = useState("buttons");
+  const [savedLeaderboard, setSavedLeaderboard] = useState([]);
   const [stats, setStats] = useState({ shotsFired: 0, correctHits: 0 });
   const [starsBg] = useState({ far: stars(18, 0.6, 1.5), mid: stars(24, 0.8, 2), near: stars(30, 1, 2.4) });
   const [cameraOffset, setCameraOffset] = useState({ x: 0, y: 0 });
@@ -299,12 +336,34 @@ export default function MusicInvadersApp() {
   const endlessRamp = levelKey === "endless" ? Math.min(2.2, 1 + endlessTime * 0.005) : 1;
   const effectiveSpeed = level.speed * speedFactor * endlessRamp;
   const answers = levelKey === "easy" || levelKey === "medium" ? BASIC : ADVANCED;
-  const leaderboard = [{ name: "Skye", score: 12 }, { name: "Arran", score: 10 }, { name: "Lewis", score: 8 }, { name: playerName || "Player", score }].sort((a, b) => b.score - a.score).slice(0, 5);
+  const liveLeaderboard = [{ name: "Skye", score: 12 }, { name: "Arran", score: 10 }, { name: "Lewis", score: 8 }, { name: playerName || "Player", score }].sort((a, b) => b.score - a.score).slice(0, 5);
+  const leaderboard = [...savedLeaderboard, { name: playerName || "Player", score }].sort((a, b) => b.score - a.score).slice(0, 8);
 
   const nextQuestion = () => {
     if (bagRef.current.length === 0) bagRef.current = [...questions].sort(() => Math.random() - 0.5);
     return bagRef.current.shift() || null;
   };
+
+  const persistScore = (candidateScore = scoreRef.current) => {
+    try {
+      const name = (playerName || "Player").trim() || "Player";
+      const raw = window.localStorage.getItem(LEADERBOARD_KEY);
+      const current = raw ? JSON.parse(raw) : [];
+      const filtered = current.filter((entry) => entry.name !== name);
+      const merged = [...filtered, { name, score: candidateScore }].sort((a, b) => b.score - a.score).slice(0, 12);
+      window.localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(merged));
+      setSavedLeaderboard(merged);
+    } catch {}
+  };
+
+  const clearSavedLeaderboard = () => {
+    try {
+      window.localStorage.removeItem(LEADERBOARD_KEY);
+      setSavedLeaderboard([]);
+      setMessage("Saved class leaderboard cleared.");
+    } catch {}
+  };
+
 
   const clearTimers = () => {
     if (loopRef.current) clearInterval(loopRef.current);
@@ -343,8 +402,18 @@ export default function MusicInvadersApp() {
   const openFullscreen = async () => {
     try {
       const el = document.documentElement;
-      if (el.requestFullscreen) await el.requestFullscreen();
-    } catch {}
+      if (el.requestFullscreen) {
+        await el.requestFullscreen();
+        return;
+      }
+      if (el.webkitRequestFullscreen) {
+        el.webkitRequestFullscreen();
+        return;
+      }
+      setMessage("Fullscreen is limited on iPad Safari. Add to Home Screen for the best full-screen experience.");
+    } catch {
+      setMessage("Fullscreen is limited on iPad Safari. Add to Home Screen for the best full-screen experience.");
+    }
   };
 
   const pulseShake = () => {
@@ -400,6 +469,8 @@ export default function MusicInvadersApp() {
   };
 
   const startGame = () => {
+    const ctx = getAudioContext();
+    if (ctx && ctx.state === "suspended") ctx.resume().catch(() => {});
     clearTimers();
     resetBoard(!preserveLivesOnStart);
     setPreserveLivesOnStart(false);
@@ -459,6 +530,16 @@ export default function MusicInvadersApp() {
   useEffect(() => {
     resetGame();
   }, [clefMode]);
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(LEADERBOARD_KEY);
+      const current = raw ? JSON.parse(raw) : [];
+      setSavedLeaderboard(Array.isArray(current) ? current : []);
+    } catch {
+      setSavedLeaderboard([]);
+    }
+  }, []);
+
 
   useEffect(() => {
     if (gameState !== "playing" || levelKey !== "endless") return;
@@ -583,6 +664,7 @@ export default function MusicInvadersApp() {
           if (soundOn) beep("level");
           advanceRef.current = setTimeout(() => {
             if (levelKey === "boss") {
+              persistScore(scoreRef.current);
               setGameState("won");
               setMessage("Boss defeated. Outstanding work!");
             } else {
@@ -614,6 +696,7 @@ export default function MusicInvadersApp() {
     if (lives <= 0 && gameState === "playing") {
       clearTimers();
       stopMusic();
+      persistScore(scoreRef.current);
       setGameState("lost");
       setMessage("Mission failed. Reset and try another round.");
     }
@@ -657,9 +740,8 @@ export default function MusicInvadersApp() {
           <span style={{ padding: "6px 12px", borderRadius: 999, border: "1px solid rgba(255,255,255,0.20)", color: "rgba(255,255,255,0.85)", fontSize: 13, fontWeight: 700 }}>Ages 10–14</span>
         </div>
 
-        <div style={styles.grid}>
-          <div style={{ display: "grid", gap: 24 }}>
-            <section style={{ ...styles.card, padding: 24 }}>
+        <div style={{ display: "grid", gap: 24 }}>
+          <section style={{ ...styles.card, padding: 24 }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap", alignItems: "end" }}>
                 <div>
                   <h1 style={{ fontSize: 52, margin: 0 }}>Music Invaders</h1>
@@ -669,7 +751,6 @@ export default function MusicInvadersApp() {
                   <button style={styles.ghostButton} onClick={() => setSoundOn((v) => !v)}>{soundOn ? "🔊 Sound on" : "🔈 Sound off"}</button>
                   <button style={styles.ghostButton} onClick={openFullscreen}>⛶ Fullscreen</button>
                   <button style={styles.button} onClick={startGame}>🚀 {gameState === "playing" ? "Restart game" : "Start mission"}</button>
-                  <button style={styles.ghostButton} onClick={() => setShowTeacherPanel((v) => !v)}>{showTeacherPanel ? "Hide teacher dashboard" : "Show teacher dashboard"}</button>
                   <button style={styles.ghostButton} onClick={resetGame}>↺ Reset</button>
                 </div>
               </div>
@@ -682,6 +763,8 @@ export default function MusicInvadersApp() {
                   </div>
                   <div style={{ position: "relative", height: 620, overflow: "hidden", borderRadius: 24, border: "1px solid rgba(255,255,255,0.12)", background: "radial-gradient(circle at 50% 20%, rgba(56,189,248,0.25), transparent 30%), radial-gradient(circle at 80% 0%, rgba(168,85,247,0.25), transparent 30%), linear-gradient(180deg, rgba(15,23,42,1), rgba(2,6,23,1))", transform: shake ? "translateX(4px)" : "translateX(0)", transition: "transform 0.08s ease" }}>
                     {Array.from({ length: LANES }).map((_, i) => <div key={i} style={{ position: "absolute", top: 0, height: "100%", left: `${10 + i * 18}%`, width: "18%", borderLeft: "1px dashed rgba(255,255,255,0.12)" }} />)}
+                    <div style={{ position: "absolute", left: "6%", right: "6%", bottom: 96, borderTop: "3px solid rgba(34,211,238,0.8)", boxShadow: "0 0 18px rgba(34,211,238,0.65)" }} />
+                    <div style={{ position: "absolute", right: 16, bottom: 104, color: "#67e8f9", fontSize: 12, letterSpacing: 2, textTransform: "uppercase" }}>Hit line</div>
                     {invaders.map((inv) => <div key={inv.id} style={{ position: "absolute", top: `${inv.y}%`, left: `${inv.isBoss ? 31 : LANE_LEFT[inv.lane]}%`, width: inv.isBoss ? "38%" : "18%" }}><div style={{ borderRadius: 24, border: inv.isBoss ? "1px solid rgba(252,211,77,0.55)" : "1px solid rgba(232,121,249,0.4)", padding: 12, background: inv.isBoss ? "rgba(245,158,11,0.10)" : "rgba(217,70,239,0.10)", boxShadow: "0 8px 24px rgba(0,0,0,0.25)" }}><Staff note={inv.question.display} clef={inv.question.clef} boss={Boolean(inv.isBoss)} /><div style={{ marginTop: 10, textAlign: "center", textTransform: "uppercase", letterSpacing: 3, color: inv.isBoss ? "#fde68a" : "#f0abfc", fontSize: inv.isBoss ? 14 : 12 }}>{inv.isBoss ? `${inv.question.clef} clef · ${inv.hp} hits left` : `${inv.question.clef} clef`}</div></div></div>)}
                     {shots.map((shot) => <div key={shot.id} style={{ position: "absolute", top: `${shot.y}%`, left: `${SHIP_LEFT[shot.lane]}%`, width: 40, height: 48, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 999, background: "#34d399", color: "#0f172a", fontWeight: 900, boxShadow: "0 10px 20px rgba(0,0,0,0.25)" }}>{shot.answer}</div>)}
                     {explosions.map((b) => <div key={b.id} style={{ position: "absolute", left: `${SHIP_LEFT[b.lane] + 1}%`, top: `${b.y}%`, width: 64, height: 64, transform: "translate(-50%,-50%)", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 999, border: b.success ? "1px solid rgba(134,239,172,0.7)" : "1px solid rgba(253,164,175,0.7)", background: b.success ? "rgba(74,222,128,0.25)" : "rgba(251,113,133,0.25)", color: b.success ? "#dcfce7" : "#ffe4e6", fontSize: 26, fontWeight: 900 }}>{b.label}</div>)}
@@ -692,9 +775,24 @@ export default function MusicInvadersApp() {
                   </div>
                 </div>
 
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
-                  {answers.map((a) => <button key={a} style={styles.button} onClick={() => fireAnswer(a)}>{a}</button>)}
+                <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+                  <button style={styles.ghostButton} onClick={() => { if (soundOn) beep("thruster"); setShipLane((lane) => { const next = clamp(lane - 1, 0, LANES - 1); addTrail(next); return next; }); }}>⬅ Move left</button>
+                  <button style={styles.ghostButton} onClick={() => { if (soundOn) beep("thruster"); setShipLane((lane) => { const next = clamp(lane + 1, 0, LANES - 1); addTrail(next); return next; }); }}>Move right ➡</button>
                 </div>
+
+                <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
+                  <button style={inputMode === "buttons" ? styles.button : styles.ghostButton} onClick={() => setInputMode("buttons")}>Note buttons</button>
+                  <button style={inputMode === "piano" ? styles.button : styles.ghostButton} onClick={() => setInputMode("piano")}>Piano keyboard</button>
+                  <button style={styles.ghostButton} onClick={() => persistScore(scoreRef.current)}>Save score</button>
+                </div>
+
+                {inputMode === "buttons" ? (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
+                    {answers.map((a) => <button key={a} style={styles.button} onClick={() => fireAnswer(a)}>{a}</button>)}
+                  </div>
+                ) : (
+                  <PianoKeyboard useAdvanced={!(levelKey === "easy" || levelKey === "medium")} onFire={fireAnswer} />
+                )}
 
                 <div style={{ display: "grid", gridTemplateColumns: "0.34fr 0.66fr", gap: 16 }}>
                   <section style={{ ...styles.card, padding: 20 }}>
@@ -734,7 +832,7 @@ export default function MusicInvadersApp() {
                       <div style={{ ...styles.subCard, padding: 16 }}><div style={{ color: "rgba(255,255,255,0.9)", fontSize: 14 }}>Best</div><div style={{ marginTop: 4, fontSize: 36, fontWeight: 800, color: "#fde047", textShadow: "0 0 10px rgba(253,224,71,0.75)" }}>{bestScore}</div></div>
                       <div style={{ ...styles.subCard, padding: 16 }}><div style={{ color: "rgba(255,255,255,0.9)", fontSize: 14 }}>Lives</div><div style={{ marginTop: 4, color: "rgba(255,255,255,0.8)", fontSize: 12 }}>Start with 3 · Max 5</div><div style={{ display: "flex", gap: 8, marginTop: 10 }}>{Array.from({ length: MAX_LIVES }).map((_, i) => <span key={i} style={{ fontSize: 24, opacity: i < lives ? 1 : 0.2 }}>❤️</span>)}</div></div>
                       <div style={{ ...styles.subCard, padding: 16 }}><div style={{ color: "rgba(255,255,255,0.9)", fontSize: 14 }}>Streak</div><div style={{ marginTop: 4, fontSize: 36, fontWeight: 800, color: "#fde047", textShadow: "0 0 10px rgba(253,224,71,0.75)" }}>{streak}</div></div>
-                      {classMode && <div style={{ ...styles.subCard, padding: 16, gridColumn: "span 2" }}><div style={{ fontWeight: 700, marginBottom: 10 }}>Class leaderboard</div>{leaderboard.map((entry, i) => <div key={`${entry.name}-${i}`} style={{ display: "flex", justifyContent: "space-between", padding: "10px 12px", borderRadius: 16, background: "rgba(15,23,42,0.7)", marginTop: 8, fontSize: 14 }}><span>{i + 1}. {entry.name}</span><span style={{ color: "#7dd3fc", fontWeight: 700 }}>{entry.score}</span></div>)}</div>}
+                      {classMode && <div style={{ ...styles.subCard, padding: 16, gridColumn: "span 2" }}><div style={{ fontWeight: 700, marginBottom: 10 }}>Class leaderboard</div><div style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", marginBottom: 8 }}>Saved on this device for classroom use.</div>{leaderboard.map((entry, i) => <div key={`${entry.name}-${i}`} style={{ display: "flex", justifyContent: "space-between", padding: "10px 12px", borderRadius: 16, background: "rgba(15,23,42,0.7)", marginTop: 8, fontSize: 14 }}><span>{i + 1}. {entry.name}</span><span style={{ color: "#7dd3fc", fontWeight: 700 }}>{entry.score}</span></div>)}</div>}
                     </div>
                   </div>
                 </div>
@@ -747,10 +845,25 @@ export default function MusicInvadersApp() {
                   <button style={styles.ghostButton} onClick={speak}>🔊 Read aloud</button>
                 </div>
               </div>
-            </section>
-          </div>
+          </section>
 
-          {showTeacherPanel && <SchoolPanel accuracy={accuracy} speedFactor={speedFactor} level={level} soundOnDefault={soundOnDefault} setSoundOnDefault={setSoundOnDefault} showPrivacy={showPrivacy} setShowPrivacy={setShowPrivacy} onApplyDefaults={applyTeacherDefaults} />}
+          <section style={{ ...styles.card, padding: 20 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: 28 }}>Teacher tools</h2>
+                <div style={{ color: "rgba(255,255,255,0.8)", marginTop: 6, fontSize: 14 }}>Hide this during pupil play, then open it again for teacher settings and curriculum notes.</div>
+              </div>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <button style={showTeacherPanel ? styles.button : styles.ghostButton} onClick={() => setShowTeacherPanel((v) => !v)}>{showTeacherPanel ? "Hide teacher dashboard" : "Show teacher dashboard"}</button>
+                <button style={styles.ghostButton} onClick={clearSavedLeaderboard}>Clear saved leaderboard</button>
+              </div>
+            </div>
+            {showTeacherPanel && (
+              <div style={{ marginTop: 18 }}>
+                <SchoolPanel accuracy={accuracy} speedFactor={speedFactor} level={level} soundOnDefault={soundOnDefault} setSoundOnDefault={setSoundOnDefault} showPrivacy={showPrivacy} setShowPrivacy={setShowPrivacy} onApplyDefaults={applyTeacherDefaults} />
+              </div>
+            )}
+          </section>
         </div>
       </div>
     </div>
