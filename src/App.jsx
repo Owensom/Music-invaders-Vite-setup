@@ -43,8 +43,8 @@ const styles = {
       "radial-gradient(circle at 20% 30%, rgba(56,189,248,0.16), transparent 35%), radial-gradient(circle at 80% 20%, rgba(168,85,247,0.2), transparent 35%), radial-gradient(ellipse at bottom, #162138 0%, #020617 72%)",
     fontFamily: "Inter, Arial, sans-serif",
   },
-  shell: { maxWidth: 1280, margin: "0 auto", padding: 24 },
-  grid: { display: "grid", gridTemplateColumns: "1.4fr 0.8fr", gap: 24, alignItems: "start" },
+  shell: { maxWidth: 1540, margin: "0 auto", padding: 20 },
+  grid: { display: "grid", gridTemplateColumns: "1fr", gap: 24, alignItems: "start" },
   card: {
     background: "rgba(15,23,42,0.78)",
     border: "1px solid rgba(255,255,255,0.12)",
@@ -267,6 +267,7 @@ export default function MusicInvadersApp() {
   const [soundOnDefault, setSoundOnDefault] = useState(false);
   const [playerName, setPlayerName] = useState("Player 1");
   const [classMode, setClassMode] = useState(true);
+  const [showTeacherPanel, setShowTeacherPanel] = useState(false);
   const [message, setMessage] = useState("Match the note before it lands.");
   const [showTitleScreen, setShowTitleScreen] = useState(true);
   const [showPrivacy, setShowPrivacy] = useState(true);
@@ -668,6 +669,7 @@ export default function MusicInvadersApp() {
                   <button style={styles.ghostButton} onClick={() => setSoundOn((v) => !v)}>{soundOn ? "🔊 Sound on" : "🔈 Sound off"}</button>
                   <button style={styles.ghostButton} onClick={openFullscreen}>⛶ Fullscreen</button>
                   <button style={styles.button} onClick={startGame}>🚀 {gameState === "playing" ? "Restart game" : "Start mission"}</button>
+                  <button style={styles.ghostButton} onClick={() => setShowTeacherPanel((v) => !v)}>{showTeacherPanel ? "Hide teacher dashboard" : "Show teacher dashboard"}</button>
                   <button style={styles.ghostButton} onClick={resetGame}>↺ Reset</button>
                 </div>
               </div>
@@ -678,7 +680,7 @@ export default function MusicInvadersApp() {
                     <div>{levelKey === "boss" ? `Boss health: ${bossHitsLeft}/${BOSS_HITS}` : levelKey === "endless" ? `Endless mode · ${endlessTime}s · speed x${endlessRamp.toFixed(2)}` : `Target score: ${level.target}`}</div>
                     <div>{level.maxInvaders === 1 ? "One note at a time" : "Maximum two notes at a time"}</div>
                   </div>
-                  <div style={{ position: "relative", height: 480, overflow: "hidden", borderRadius: 24, border: "1px solid rgba(255,255,255,0.12)", background: "radial-gradient(circle at 50% 20%, rgba(56,189,248,0.25), transparent 30%), radial-gradient(circle at 80% 0%, rgba(168,85,247,0.25), transparent 30%), linear-gradient(180deg, rgba(15,23,42,1), rgba(2,6,23,1))", transform: shake ? "translateX(4px)" : "translateX(0)", transition: "transform 0.08s ease" }}>
+                  <div style={{ position: "relative", height: 620, overflow: "hidden", borderRadius: 24, border: "1px solid rgba(255,255,255,0.12)", background: "radial-gradient(circle at 50% 20%, rgba(56,189,248,0.25), transparent 30%), radial-gradient(circle at 80% 0%, rgba(168,85,247,0.25), transparent 30%), linear-gradient(180deg, rgba(15,23,42,1), rgba(2,6,23,1))", transform: shake ? "translateX(4px)" : "translateX(0)", transition: "transform 0.08s ease" }}>
                     {Array.from({ length: LANES }).map((_, i) => <div key={i} style={{ position: "absolute", top: 0, height: "100%", left: `${10 + i * 18}%`, width: "18%", borderLeft: "1px dashed rgba(255,255,255,0.12)" }} />)}
                     {invaders.map((inv) => <div key={inv.id} style={{ position: "absolute", top: `${inv.y}%`, left: `${inv.isBoss ? 31 : LANE_LEFT[inv.lane]}%`, width: inv.isBoss ? "38%" : "18%" }}><div style={{ borderRadius: 24, border: inv.isBoss ? "1px solid rgba(252,211,77,0.55)" : "1px solid rgba(232,121,249,0.4)", padding: 12, background: inv.isBoss ? "rgba(245,158,11,0.10)" : "rgba(217,70,239,0.10)", boxShadow: "0 8px 24px rgba(0,0,0,0.25)" }}><Staff note={inv.question.display} clef={inv.question.clef} boss={Boolean(inv.isBoss)} /><div style={{ marginTop: 10, textAlign: "center", textTransform: "uppercase", letterSpacing: 3, color: inv.isBoss ? "#fde68a" : "#f0abfc", fontSize: inv.isBoss ? 14 : 12 }}>{inv.isBoss ? `${inv.question.clef} clef · ${inv.hp} hits left` : `${inv.question.clef} clef`}</div></div></div>)}
                     {shots.map((shot) => <div key={shot.id} style={{ position: "absolute", top: `${shot.y}%`, left: `${SHIP_LEFT[shot.lane]}%`, width: 40, height: 48, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 999, background: "#34d399", color: "#0f172a", fontWeight: 900, boxShadow: "0 10px 20px rgba(0,0,0,0.25)" }}>{shot.answer}</div>)}
@@ -748,7 +750,7 @@ export default function MusicInvadersApp() {
             </section>
           </div>
 
-          <SchoolPanel accuracy={accuracy} speedFactor={speedFactor} level={level} soundOnDefault={soundOnDefault} setSoundOnDefault={setSoundOnDefault} showPrivacy={showPrivacy} setShowPrivacy={setShowPrivacy} onApplyDefaults={applyTeacherDefaults} />
+          {showTeacherPanel && <SchoolPanel accuracy={accuracy} speedFactor={speedFactor} level={level} soundOnDefault={soundOnDefault} setSoundOnDefault={setSoundOnDefault} showPrivacy={showPrivacy} setShowPrivacy={setShowPrivacy} onApplyDefaults={applyTeacherDefaults} />}
         </div>
       </div>
     </div>
