@@ -358,6 +358,8 @@ export default function MusicInvadersApp() {
   const [showTitleScreen, setShowTitleScreen] = useState(true);
   const [showPrivacy, setShowPrivacy] = useState(true);
   const [showTeacherTools, setShowTeacherTools] = useState(true);
+  const [pendingLevelKey, setPendingLevelKey] = useState("easy");
+  const [pendingClefMode, setPendingClefMode] = useState("treble");
   const [stats, setStats] = useState({ shotsFired: 0, correctHits: 0 });
   const [selectedPracticeNotes, setSelectedPracticeNotes] = useState(["C","D","E","F","G","A","B"]);
   const [teacherSpeed, setTeacherSpeed] = useState("normal");
@@ -390,6 +392,11 @@ export default function MusicInvadersApp() {
   const effectiveSpeed = level.speed * speedFactor * endlessRamp * teacherSpeedFactor;
   const answers = levelKey === "easy" || levelKey === "medium" ? BASIC : ADVANCED;
   const leaderboard = [{ name: "Skye", score: 12 }, { name: "Arran", score: 10 }, { name: "Lewis", score: 8 }, { name: playerName || "Player", score }].sort((a, b) => b.score - a.score).slice(0, 5);
+  useEffect(() => {
+    setPendingLevelKey(levelKey);
+    setPendingClefMode(clefMode);
+  }, [levelKey, clefMode]);
+
 
   const nextQuestion = () => {
     if (bagRef.current.length === 0) bagRef.current = [...questions].sort(() => Math.random() - 0.5);
@@ -491,11 +498,15 @@ export default function MusicInvadersApp() {
 
   const startGame = () => {
     clearTimers();
+    const nextLevelKey = pendingLevelKey;
+    const nextClefMode = pendingClefMode;
+    setLevelKey(nextLevelKey);
+    setClefMode(nextClefMode);
     resetBoard(!preserveLivesOnStart);
     setPreserveLivesOnStart(false);
     setGameState("playing");
     setShowTitleScreen(false);
-    setMessage(levelKey === "boss" ? "Boss battle. Hit the mega note five times." : "Game on. Read carefully and fire the correct answer.");
+    setMessage(nextLevelKey === "boss" ? "Boss battle. Hit the mega note five times." : "Game on. Read carefully and fire the correct answer.");
     startMusic();
   };
 
@@ -729,8 +740,11 @@ export default function MusicInvadersApp() {
       {showTitleScreen && (
         <div style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "center", justifyContent: "center", padding: 16, background: "rgba(2,6,23,0.8)" }}>
           <div style={{ width: "100%", maxWidth: 800, padding: 32, textAlign: "center", ...styles.card, background: "rgba(2,6,23,0.95)" }}>
-            <div style={{ margin: "0 auto 16px", width: 64, height: 64, borderRadius: 999, display: "flex", alignItems: "center", justifyContent: "center", background: "#34d399", color: "#0f172a", fontSize: 32 }}>🚀</div>
-            <h1 style={{ fontSize: 44, margin: 0 }}>Music Invaders</h1>
+            <div style={{ margin: "0 auto 16px", width: 86, height: 86, borderRadius: 24, display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(180deg, #0ea5e9, #8b5cf6)", color: "white", fontSize: 40, boxShadow: "0 16px 40px rgba(14,165,233,0.28), inset 0 1px 0 rgba(255,255,255,0.25)", border: "1px solid rgba(255,255,255,0.22)" }}>🚀</div>
+            <h1 style={{ fontSize: 46, margin: 0, letterSpacing: 0.5 }}>Music Invaders</h1>
+            <div style={{ marginTop: 8, display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 12px", borderRadius: 999, background: "rgba(103,232,249,0.10)", border: "1px solid rgba(103,232,249,0.30)", color: "#cffafe", fontSize: 13, fontWeight: 800, letterSpacing: 1.2, textTransform: "uppercase" }}>
+              <span>MI</span><span style={{ opacity: 0.6 }}>•</span><span>School Edition</span>
+            </div>
             <p style={{ color: "rgba(255,255,255,0.9)", marginTop: 12 }}>A note-reading space game for ages 10–14, designed for school use.</p>
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 24 }}>
               <button style={styles.button} onClick={startGame}>▶ Start game</button>
@@ -803,13 +817,13 @@ export default function MusicInvadersApp() {
                     <div style={{ display: "grid", gap: 16 }}>
                       <div>
                         <div style={{ marginBottom: 8, color: "rgba(255,255,255,0.9)", fontSize: 14 }}>Difficulty</div>
-                        <select style={styles.select} value={levelKey} onChange={(e) => { setLevelKey(e.target.value); resetGame(); }}>
+                        <select style={styles.select} value={showTitleScreen ? pendingLevelKey : levelKey} onChange={(e) => { if (showTitleScreen) { setPendingLevelKey(e.target.value); } else { setLevelKey(e.target.value); resetGame(); } }}>
                           {LEVELS.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
                         </select>
                       </div>
                       <div>
                         <div style={{ marginBottom: 8, color: "rgba(255,255,255,0.9)", fontSize: 14 }}>Clef focus</div>
-                        <select style={styles.select} value={clefMode} onChange={(e) => setClefMode(e.target.value)}>
+                        <select style={styles.select} value={showTitleScreen ? pendingClefMode : clefMode} onChange={(e) => { if (showTitleScreen) { setPendingClefMode(e.target.value); } else { setClefMode(e.target.value); } }}>
                           <option value="treble">Treble clef</option>
                           <option value="bass">Bass clef</option>
                           <option value="both">Both clefs</option>
