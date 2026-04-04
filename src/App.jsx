@@ -454,6 +454,7 @@ export default function MusicInvadersApp() {
   const musicRef = useRef(null);
   const shootingRef = useRef(null);
   const cameraRef = useRef(null);
+  const moveRepeatRef = useRef(null);
 
   const level = useMemo(() => LEVELS.find((item) => item.key === levelKey) || LEVELS[0], [levelKey]);
   const questions = useMemo(() => getQuestions(levelKey, clefMode, selectedPracticeNotes), [levelKey, clefMode, selectedPracticeNotes]);
@@ -465,10 +466,6 @@ export default function MusicInvadersApp() {
   const effectiveSpeed = level.speed * speedFactor * endlessRamp * teacherSpeedFactor;
   const answers = levelKey === "easy" || levelKey === "medium" ? BASIC : ADVANCED;
   const leaderboard = [{ name: "Skye", score: 12 }, { name: "Arran", score: 10 }, { name: "Lewis", score: 8 }, { name: playerName || "Player", score }].sort((a, b) => b.score - a.score).slice(0, 5);
-  useEffect(() => {
-    setPendingLevelKey(levelKey);
-    setPendingClefMode(clefMode);
-  }, [levelKey, clefMode]);
 
 
   const nextQuestion = () => {
@@ -480,6 +477,7 @@ export default function MusicInvadersApp() {
     if (loopRef.current) clearInterval(loopRef.current);
     if (spawnRef.current) clearInterval(spawnRef.current);
     if (advanceRef.current) clearTimeout(advanceRef.current);
+    stopMoveRepeat();
   };
 
   const stopAmbient = () => {
@@ -618,6 +616,24 @@ export default function MusicInvadersApp() {
       addTrail(next);
       return next;
     });
+  };
+
+  const stopMoveRepeat = () => {
+    if (moveRepeatRef.current) {
+      clearInterval(moveRepeatRef.current);
+      moveRepeatRef.current = null;
+    }
+  };
+
+  const startMoveRepeat = (direction) => {
+    if (gameState !== "playing") return;
+    stopMoveRepeat();
+    if (direction === "left") moveLeft();
+    if (direction === "right") moveRight();
+    moveRepeatRef.current = setInterval(() => {
+      if (direction === "left") moveLeft();
+      if (direction === "right") moveRight();
+    }, 140);
   };
 
   useEffect(() => {
@@ -829,7 +845,34 @@ export default function MusicInvadersApp() {
               <span>MI</span><span style={{ opacity: 0.6 }}>•</span><span>School Edition</span>
             </div>
             <p style={{ color: "rgba(255,255,255,0.9)", marginTop: 12 }}>A note-reading space game for ages 10–14, designed for school use.</p>
-            <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 24 }}>
+            <div style={{ marginTop: 22, textAlign: "left", ...styles.subCard, padding: 18 }}>
+              <div style={{ color: "#cffafe", fontSize: 13, fontWeight: 800, letterSpacing: 1.1, textTransform: "uppercase", marginBottom: 12 }}>Game options</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <div style={{ marginBottom: 8, color: "rgba(255,255,255,0.9)", fontSize: 14 }}>Starting level</div>
+                  <select style={styles.select} value={pendingLevelKey} onChange={(e) => setPendingLevelKey(e.target.value)}>
+                    {LEVELS.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <div style={{ marginBottom: 8, color: "rgba(255,255,255,0.9)", fontSize: 14 }}>Clef focus</div>
+                  <select style={styles.select} value={pendingClefMode} onChange={(e) => setPendingClefMode(e.target.value)}>
+                    <option value="treble">Treble clef</option>
+                    <option value="bass">Bass clef</option>
+                    <option value="both">Both clefs</option>
+                  </select>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
+                <div style={{ padding: "6px 12px", borderRadius: 999, background: "rgba(103,232,249,0.10)", border: "1px solid rgba(103,232,249,0.30)", color: "#cffafe", fontSize: 13, fontWeight: 700 }}>
+                  Start mode: {LEVELS.find((x) => x.key === pendingLevelKey)?.label || "Level 1"}
+                </div>
+                <div style={{ padding: "6px 12px", borderRadius: 999, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.16)", color: "rgba(255,255,255,0.9)", fontSize: 13, fontWeight: 700 }}>
+                  Clef: {pendingClefMode === "both" ? "Both" : pendingClefMode[0].toUpperCase() + pendingClefMode.slice(1)}
+                </div>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 18 }}>
               <button style={styles.button} onClick={startGame}>▶ Start game</button>
               <button style={styles.ghostButton} onClick={openFullscreen}>⛶ Open fullscreen</button>
             </div>
@@ -894,28 +937,31 @@ export default function MusicInvadersApp() {
                   <button
                     type="button"
                     style={{ ...styles.ghostButton, minWidth: 140, fontSize: 18, fontWeight: 800, padding: "14px 18px" }}
-                    onClick={moveLeft}
-                    onTouchStart={(e) => { e.preventDefault(); moveLeft(); }}
+                    onMouseDown={() => startMoveRepeat("left")}
+                    onMouseUp={stopMoveRepeat}
+                    onMouseLeave={stopMoveRepeat}
+                    onTouchStart={(e) => { e.preventDefault(); startMoveRepeat("left"); }}
+                    onTouchEnd={stopMoveRepeat}
+                    onTouchCancel={stopMoveRepeat}
                   >
                     ⬅ Move left
                   </button>
                   <button
                     type="button"
                     style={{ ...styles.ghostButton, minWidth: 140, fontSize: 18, fontWeight: 800, padding: "14px 18px" }}
-                    onClick={moveRight}
-                    onTouchStart={(e) => { e.preventDefault(); moveRight(); }}
+                    onMouseDown={() => startMoveRepeat("right")}
+                    onMouseUp={stopMoveRepeat}
+                    onMouseLeave={stopMoveRepeat}
+                    onTouchStart={(e) => { e.preventDefault(); startMoveRepeat("right"); }}
+                    onTouchEnd={stopMoveRepeat}
+                    onTouchCancel={stopMoveRepeat}
                   >
                     Move right ➡
                   </button>
                 </div>
                 <div style={{ display: "flex", justifyContent: "center", marginTop: -4, color: "rgba(255,255,255,0.72)", fontSize: 12 }}>
-                  Tablet controls
+                  Hold buttons for smoother tablet movement
                 </div>
-                <div style={{ display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
-                  <button type="button" style={{ ...styles.ghostButton, minWidth: 140, fontSize: 18, fontWeight: 800, padding: "14px 18px" }} onClick={moveLeft} onTouchStart={(e) => { e.preventDefault(); moveLeft(); }}>⬅ Move left</button>
-                  <button type="button" style={{ ...styles.ghostButton, minWidth: 140, fontSize: 18, fontWeight: 800, padding: "14px 18px" }} onClick={moveRight} onTouchStart={(e) => { e.preventDefault(); moveRight(); }}>Move right ➡</button>
-                </div>
-                <div style={{ display: "flex", justifyContent: "center", marginTop: -4, color: "rgba(255,255,255,0.72)", fontSize: 12 }}>Tablet controls</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
                   {answers.map((a) => <button key={a} style={styles.button} onClick={() => fireAnswer(a)}>{a}</button>)}
                 </div>
