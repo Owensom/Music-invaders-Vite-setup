@@ -695,7 +695,7 @@ export default function MusicInvadersApp() {
           if (prev.length) return prev;
           const pool = questions;
           if (!pool.length) return prev;
-          return [{ id: idRef.current++, lane: 2, y: 10, hp: BOSS_HITS, isBoss: true, question: nextQuestion() || pick(pool) }];
+          return [{ id: idRef.current++, lane: pick([0, 1, 2, 3, 4]), y: 10, hp: BOSS_HITS, isBoss: true, question: nextQuestion() || pick(pool) }];
         }
         const occupied = new Set(prev.filter((x) => x.y < 36).map((x) => x.lane));
         const free = Array.from({ length: LANES }, (_, i) => i).filter((lane) => !occupied.has(lane));
@@ -741,6 +741,11 @@ export default function MusicInvadersApp() {
 
               if (inv.isBoss) {
                 const nextHits = Math.max(0, (inv.hp ?? BOSS_HITS) - 1);
+                const nextScore = scoreRef.current + 1;
+                scoreRef.current = nextScore;
+                setScore(nextScore);
+                setBestScore((best) => Math.max(best, nextScore));
+                setStreak((s) => s + 1);
                 setBossHitsLeft(nextHits);
                 setMessage(`Boss hit. ${nextHits} hits left.`);
                 if (nextHits > 0) remainingInvaders.push({ ...inv, hp: nextHits });
@@ -930,7 +935,7 @@ export default function MusicInvadersApp() {
                   </div>
                   <div style={{ position: "relative", height: 580, overflow: "hidden", borderRadius: 24, border: "1px solid rgba(255,255,255,0.12)", background: "radial-gradient(circle at 50% 20%, rgba(56,189,248,0.25), transparent 30%), radial-gradient(circle at 80% 0%, rgba(168,85,247,0.25), transparent 30%), linear-gradient(180deg, rgba(15,23,42,1), rgba(2,6,23,1))", transform: shake ? "translateX(4px)" : "translateX(0)", transition: "transform 0.08s ease" }}>
                     {starsBg.near.slice(0, 18).map((s) => <div key={`board-star-${s.id}`} style={{ position: "absolute", left: `${(s.left * 0.9) + 5}%`, top: `${(s.top * 0.45) + 2}%`, width: Math.max(1, s.size * 0.8), height: Math.max(1, s.size * 0.8), borderRadius: 999, background: "white", opacity: 0.45 }} />)}{shootingStars.map((s) => <div key={`monitor-star-${s.id}`} style={{ position: "absolute", left: `${s.left}%`, top: `${s.top}%`, width: s.length, height: 3, background: "linear-gradient(90deg, rgba(255,255,255,1), rgba(255,255,255,0))", boxShadow: "0 0 8px rgba(255,255,255,0.8)", transform: `rotate(${s.angle}deg)`, opacity: 0.8, pointerEvents: "none" }} />)}{Array.from({ length: LANES }).map((_, i) => <div key={i} style={{ position: "absolute", top: 0, height: "100%", left: `${10 + i * 18}%`, width: "18%", borderLeft: "1px dashed rgba(255,255,255,0.12)" }} />)}
-                    {invaders.map((inv) => <div key={inv.id} style={{ position: "absolute", top: `${inv.isBoss ? Math.max(8, inv.y) : inv.y}%`, left: `${inv.isBoss ? 31 : LANE_LEFT[inv.lane]}%`, width: inv.isBoss ? "38%" : "18%" }}><div style={{ borderRadius: 24, border: inv.isBoss ? "1px solid rgba(252,211,77,0.55)" : "1px solid rgba(232,121,249,0.4)", padding: inv.isBoss ? 6 : 12, overflow: "hidden", background: inv.isBoss ? "rgba(245,158,11,0.10)" : "rgba(217,70,239,0.10)", boxShadow: "0 8px 24px rgba(0,0,0,0.25)" }}><Staff note={inv.question.display} clef={inv.question.clef} boss={Boolean(inv.isBoss)} /><div style={{ marginTop: 8, textAlign: "center", textTransform: "uppercase", letterSpacing: 2.2, color: inv.isBoss ? "#fde68a" : "#f0abfc", fontSize: inv.isBoss ? 10 : 12 }}>{inv.isBoss ? `${inv.question.clef} clef · ${inv.hp} hits left` : `${inv.question.clef} clef`}</div></div></div>)}
+                    {invaders.map((inv) => <div key={inv.id} style={{ position: "absolute", top: `${inv.isBoss ? Math.max(8, inv.y) : inv.y}%`, left: `${inv.isBoss ? LANE_LEFT[Math.max(0, Math.min(LANES - 1, inv.lane))] : LANE_LEFT[inv.lane]}%`, width: inv.isBoss ? "18%" : "18%" }}><div style={{ borderRadius: 24, border: inv.isBoss ? "1px solid rgba(252,211,77,0.55)" : "1px solid rgba(232,121,249,0.4)", padding: inv.isBoss ? 6 : 12, overflow: "hidden", background: inv.isBoss ? "rgba(245,158,11,0.10)" : "rgba(217,70,239,0.10)", boxShadow: "0 8px 24px rgba(0,0,0,0.25)" }}><Staff note={inv.question.display} clef={inv.question.clef} boss={Boolean(inv.isBoss)} /><div style={{ marginTop: 8, textAlign: "center", textTransform: "uppercase", letterSpacing: 2.2, color: inv.isBoss ? "#fde68a" : "#f0abfc", fontSize: inv.isBoss ? 10 : 12 }}>{inv.isBoss ? `${inv.question.clef} clef · ${inv.hp} hits left` : `${inv.question.clef} clef`}</div></div></div>)}
                     {shots.map((shot) => <div key={shot.id} style={{ position: "absolute", top: `${shot.y}%`, left: `${SHIP_LEFT[shot.lane]}%`, width: 40, height: 48, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 999, background: "#34d399", color: "#0f172a", fontWeight: 900, boxShadow: "0 10px 20px rgba(0,0,0,0.25)" }}>{shot.answer}</div>)}
                     {explosions.map((b) => <div key={b.id} style={{ position: "absolute", left: `${SHIP_LEFT[b.lane] + 1}%`, top: `${b.y}%`, width: 64, height: 64, transform: "translate(-50%,-50%)", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 999, border: b.success ? "1px solid rgba(134,239,172,0.7)" : "1px solid rgba(253,164,175,0.7)", background: b.success ? "rgba(74,222,128,0.25)" : "rgba(251,113,133,0.25)", color: b.success ? "#dcfce7" : "#ffe4e6", fontSize: 26, fontWeight: 900 }}>{b.label}</div>)}
                     <div style={{ position: "absolute", bottom: 8, left: `${50 + (shipLane - 2) * 18}%`, transform: "translateX(-50%)" }}>
