@@ -309,7 +309,7 @@ function Staff({ note, clef, boss = false }) {
   );
 }
 
-function SchoolPanel({ accuracy, speedFactor, level, soundOnDefault, setSoundOnDefault, showPrivacy, setShowPrivacy, onApplyDefaults, selectedPracticeNotes, setSelectedPracticeNotes, teacherSpeed, setTeacherSpeed }) {
+function SchoolPanel({ accuracy, speedFactor, level, soundOnDefault, setSoundOnDefault, showPrivacy, setShowPrivacy, onApplyDefaults, selectedPracticeNotes, setSelectedPracticeNotes, teacherSpeed, setTeacherSpeed, smartboardMode, setSmartboardMode }) {
   return (
     <div style={{ display: "grid", gap: 24 }}>
       <section style={{ ...styles.card, padding: 24 }}>
@@ -394,6 +394,21 @@ function SchoolPanel({ accuracy, speedFactor, level, soundOnDefault, setSoundOnD
               ))}
             </div>
           </div>
+          <div style={{ ...styles.subCard, padding: 16 }}>
+            <div style={{ color: "rgba(255,255,255,0.9)", fontSize: 14, marginBottom: 10 }}>Smartboard mode</div>
+            <div style={{ color: "rgba(255,255,255,0.8)", fontSize: 12, marginBottom: 10 }}>Bigger touch targets and slightly slower notes for classroom screens.</div>
+            <button
+              type="button"
+              onClick={() => setSmartboardMode((v) => !v)}
+              style={{
+                ...styles.ghostButton,
+                background: smartboardMode ? "rgba(103,232,249,0.22)" : "transparent",
+                border: smartboardMode ? "1px solid rgba(103,232,249,0.8)" : "1px solid rgba(255,255,255,0.20)"
+              }}
+            >
+              {smartboardMode ? "Smartboard mode on" : "Smartboard mode off"}
+            </button>
+          </div>
         </div>
       </section>
       <section style={{ ...styles.card, padding: 24 }}>
@@ -436,6 +451,8 @@ export default function MusicInvadersApp() {
   const [stats, setStats] = useState({ shotsFired: 0, correctHits: 0 });
   const [selectedPracticeNotes, setSelectedPracticeNotes] = useState(["C","D","E","F","G","A","B"]);
   const [teacherSpeed, setTeacherSpeed] = useState("normal");
+  const [smartboardMode, setSmartboardMode] = useState(false);
+  const [communalScores, setCommunalScores] = useState([]);
   const [starsBg] = useState({ far: stars(18, 0.6, 1.5), mid: stars(24, 0.8, 2), near: stars(30, 1, 2.4) });
   const [cameraOffset, setCameraOffset] = useState({ x: 0, y: 0 });
   const [shootingStars, setShootingStars] = useState([]);
@@ -464,10 +481,39 @@ export default function MusicInvadersApp() {
   const speedFactor = accuracy >= 90 ? 1.08 : accuracy < 65 ? 0.88 : 1;
   const endlessRamp = levelKey === "endless" ? Math.min(2.2, 1 + endlessTime * 0.005) : 1;
   const teacherSpeedFactor = teacherSpeed === "slow" ? 0.8 : teacherSpeed === "fast" ? 1.25 : 1;
-  const effectiveSpeed = level.speed * speedFactor * endlessRamp * teacherSpeedFactor;
+  const smartboardSpeedFactor = smartboardMode ? 0.85 : 1;
+  const effectiveSpeed = level.speed * speedFactor * endlessRamp * teacherSpeedFactor * smartboardSpeedFactor;
   const answers = levelKey === "easy" || levelKey === "medium" ? BASIC : ADVANCED;
-  const leaderboard = [{ name: "Skye", score: 12 }, { name: "Arran", score: 10 }, { name: "Lewis", score: 8 }, { name: playerName || "Player", score }].sort((a, b) => b.score - a.score).slice(0, 5);
+  const leaderboard = communalScores.length
+    ? communalScores
+    : [{ name: "Skye", score: 12 }, { name: "Arran", score: 10 }, { name: "Lewis", score: 8 }, { name: playerName || "Player", score }]
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 10);
 
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem("musicInvadersLeaderboard");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) setCommunalScores(parsed);
+      }
+    } catch {}
+  }, []);
+
+  const saveCommunalScore = (finalScore) => {
+    try {
+      const entry = {
+        name: (playerName || "Player").trim() || "Player",
+        score: finalScore,
+        ts: Date.now(),
+      };
+      const merged = [...communalScores, entry]
+        .sort((a, b) => (b.score - a.score) || (a.ts - b.ts))
+        .slice(0, 10);
+      setCommunalScores(merged);
+      window.localStorage.setItem("musicInvadersLeaderboard", JSON.stringify(merged));
+    } catch {}
+  };
 
   const nextQuestion = () => {
     if (bagRef.current.length === 0) bagRef.current = [...questions].sort(() => Math.random() - 0.5);
@@ -795,6 +841,7 @@ export default function MusicInvadersApp() {
           if (soundOn) beep("level");
           advanceRef.current = setTimeout(() => {
             if (levelKey === "boss") {
+              saveCommunalScore(scoreRef.current);
               setGameState("won");
               setMessage("Boss defeated. Outstanding work!");
             } else {
@@ -826,6 +873,7 @@ export default function MusicInvadersApp() {
     if (lives <= 0 && gameState === "playing") {
       clearTimers();
       stopMusic();
+      saveCommunalScore(scoreRef.current);
       setGameState("lost");
       setMessage("Mission failed. Reset and try another round.");
     }
@@ -971,7 +1019,7 @@ export default function MusicInvadersApp() {
                   Hold buttons for smoother tablet movement
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
-                  {answers.map((a) => <button key={a} style={styles.button} onClick={() => fireAnswer(a)}>{a}</button>)}
+                  {answers.map((a) => <button key={a} style={{ ...styles.button, fontSize: smartboardMode ? 22 : undefined, padding: smartboardMode ? "16px 20px" : styles.button.padding, minWidth: smartboardMode ? 72 : undefined }} onClick={() => fireAnswer(a)}>{a}</button>)}
                 </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "0.34fr 0.66fr", gap: 16 }}>
@@ -1012,7 +1060,7 @@ export default function MusicInvadersApp() {
                       <div style={{ ...styles.subCard, padding: 16 }}><div style={{ color: "rgba(255,255,255,0.9)", fontSize: 14 }}>Best</div><div style={{ marginTop: 4, fontSize: 36, fontWeight: 800, color: "#fde047", textShadow: "0 0 10px rgba(253,224,71,0.75)" }}>{bestScore}</div></div>
                       <div style={{ ...styles.subCard, padding: 16 }}><div style={{ color: "rgba(255,255,255,0.9)", fontSize: 14 }}>Lives</div><div style={{ marginTop: 4, color: "rgba(255,255,255,0.8)", fontSize: 12 }}>Start with 3 · Max 5</div><div style={{ display: "flex", gap: 8, marginTop: 10 }}>{Array.from({ length: MAX_LIVES }).map((_, i) => <span key={i} style={{ fontSize: 24, opacity: i < lives ? 1 : 0.2 }}>❤️</span>)}</div></div>
                       <div style={{ ...styles.subCard, padding: 16 }}><div style={{ color: "rgba(255,255,255,0.9)", fontSize: 14 }}>Streak</div><div style={{ marginTop: 4, fontSize: 36, fontWeight: 800, color: "#fde047", textShadow: "0 0 10px rgba(253,224,71,0.75)" }}>{streak}</div></div>
-                      {classMode && <div style={{ ...styles.subCard, padding: 16, gridColumn: "span 2" }}><div style={{ fontWeight: 700, marginBottom: 10 }}>Class leaderboard</div>{leaderboard.map((entry, i) => <div key={`${entry.name}-${i}`} style={{ display: "flex", justifyContent: "space-between", padding: "10px 12px", borderRadius: 16, background: "rgba(15,23,42,0.7)", marginTop: 8, fontSize: 14 }}><span>{i + 1}. {entry.name}</span><span style={{ color: "#7dd3fc", fontWeight: 700 }}>{entry.score}</span></div>)}</div>}
+                      {classMode && <div style={{ ...styles.subCard, padding: 16, gridColumn: "span 2" }}><div style={{ fontWeight: 700, marginBottom: 10 }}>Communal leaderboard</div>{leaderboard.map((entry, i) => <div key={`${entry.name}-${i}`} style={{ display: "flex", justifyContent: "space-between", padding: "10px 12px", borderRadius: 16, background: "rgba(15,23,42,0.7)", marginTop: 8, fontSize: 14 }}><span>{i + 1}. {entry.name}</span><span style={{ color: "#7dd3fc", fontWeight: 700 }}>{entry.score}</span></div>)}</div>}
                     </div>
                   </div>
                 </div>
