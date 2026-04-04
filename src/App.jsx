@@ -15,7 +15,7 @@ const LEVELS = [
   { key: "ledger1", label: "Level 5", speed: 0.42, spawnEvery: 2800, target: 16, maxInvaders: 2 },
   { key: "ledger2", label: "Level 6", speed: 0.42, spawnEvery: 2600, target: 18, maxInvaders: 2 },
   { key: "teacher", label: "Teacher Set", speed: 0.42, spawnEvery: 3000, target: 12, maxInvaders: 1 },
-  { key: "boss", label: "Boss", speed: 0.32, spawnEvery: 999999, target: 1, maxInvaders: 1 },
+  { key: "boss", label: "Boss", speed: 0.26, spawnEvery: 999999, target: 1, maxInvaders: 1 },
   { key: "endless", label: "Endless", speed: 0.55, spawnEvery: 2600, target: 999999, maxInvaders: 2 },
 ];
 
@@ -177,7 +177,11 @@ function tone(type, freq, duration, volume) {
 }
 
 function normalizeAnswer(answer) {
-  const value = String(answer || "").trim().replace("♯", "#").replace("♭", "b");
+  const value = String(answer || "")
+    .trim()
+    .replace("♯", "#")
+    .replace("♭", "b")
+    .replace(/\s+/g, "");
   const enharmonic = {
     "Ab": "G#",
     "Bb": "A#",
@@ -218,19 +222,88 @@ function Staff({ note, clef, boss = false }) {
   const y = 22 + (note.line - 4) * 20;
   const color = NOTE_COLORS[note.label?.[0]] || "white";
   const stemUp = note.line >= 6;
+
+  const ledgerYs = [];
+  for (let line = 9; line <= 12; line += 1) {
+    if (note.line >= line) ledgerYs.push(102 + (line - 8) * 20);
+  }
+  for (let line = 3; line >= 0; line -= 1) {
+    if (note.line <= line) ledgerYs.push(22 - (4 - line) * 20);
+  }
+
   return (
-    <div style={{ position: "relative", borderRadius: 18, background: "rgba(2,6,23,0.82)", padding: 12, height: boss ? 140 : 144 }}>
-      <div style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: boss ? 38 : 44 }}>{clef === "treble" ? "𝄞" : "𝄢"}</div>
-      <svg viewBox="0 0 300 124" style={{ width: "100%", height: "100%" }}>
-        {[22, 42, 62, 82, 102].map((line) => <line key={line} x1="58" x2="286" y1={line} y2={line} stroke="rgba(255,255,255,0.92)" strokeWidth="2.6" />)}
-        {note.line > 8 && <line x1="165" x2="245" y1={102} y2={102} stroke="white" strokeWidth="3.5" strokeLinecap="round" />}
-        {note.line >= 9 && <line x1="165" x2="245" y1={122} y2={122} stroke="white" strokeWidth="3.5" strokeLinecap="round" />}
-        {note.line < 4 && <line x1="165" x2="245" y1={22} y2={22} stroke="white" strokeWidth="3.5" strokeLinecap="round" />}
-        {note.line <= 3 && <line x1="165" x2="245" y1={2} y2={2} stroke="white" strokeWidth="3.5" strokeLinecap="round" />}
-        {note.accidental === "#" && <g transform={`translate(149 ${y - 18})`}><line x1="8" y1="0" x2="8" y2="36" stroke="#22c55e" strokeWidth="4.2" /><line x1="20" y1="0" x2="20" y2="36" stroke="#22c55e" strokeWidth="4.2" /><line x1="2" y1="12" x2="26" y2="8" stroke="#22c55e" strokeWidth="4.2" /><line x1="2" y1="26" x2="26" y2="22" stroke="#22c55e" strokeWidth="4.2" /></g>}
-        {note.accidental === "b" && <g transform={`translate(152 ${y - 18})`}><line x1="8" y1="0" x2="8" y2="35" stroke="#ff4d4f" strokeWidth="4.2" /><path d="M8 14 C18 8, 20 18, 8 21" fill="none" stroke="#ff4d4f" strokeWidth="4.2" /><path d="M8 22 C18 16, 20 26, 8 29" fill="none" stroke="#ff4d4f" strokeWidth="4.2" /></g>}
-        <ellipse cx="205" cy={y} rx={boss ? 18 : 20} ry={boss ? 12 : 13} fill={color} stroke="white" strokeWidth="2.2" transform={`rotate(-18 205 ${y})`} />
-        {stemUp ? <line x1="223" x2="223" y1={y} y2={Math.max(10, y - 42)} stroke={color} strokeWidth="4.2" /> : <line x1="187" x2="187" y1={y} y2={Math.min(114, y + 42)} stroke={color} strokeWidth="4.2" />}
+    <div
+      style={{
+        position: "relative",
+        borderRadius: 18,
+        background: "rgba(2,6,23,0.82)",
+        padding: boss ? 10 : 12,
+        height: boss ? 156 : 144,
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          left: boss ? 12 : 14,
+          top: "50%",
+          transform: "translateY(-50%)",
+          fontSize: boss ? 34 : 44,
+          lineHeight: 1,
+        }}
+      >
+        {clef === "treble" ? "𝄞" : "𝄢"}
+      </div>
+      <svg viewBox="0 -30 300 190" style={{ width: "100%", height: "100%", overflow: "visible" }}>
+        {[22, 42, 62, 82, 102].map((line) => (
+          <line key={line} x1="58" x2="286" y1={line} y2={line} stroke="rgba(255,255,255,0.92)" strokeWidth="2.6" />
+        ))}
+
+        {ledgerYs.map((ly, i) => (
+          <line
+            key={`ledger-${i}`}
+            x1="160"
+            x2="250"
+            y1={ly}
+            y2={ly}
+            stroke="white"
+            strokeWidth="3.8"
+            strokeLinecap="round"
+          />
+        ))}
+
+        {note.accidental === "#" && (
+          <g transform={`translate(149 ${y - 18})`}>
+            <line x1="8" y1="0" x2="8" y2="36" stroke="#22c55e" strokeWidth="4.2" />
+            <line x1="20" y1="0" x2="20" y2="36" stroke="#22c55e" strokeWidth="4.2" />
+            <line x1="2" y1="12" x2="26" y2="8" stroke="#22c55e" strokeWidth="4.2" />
+            <line x1="2" y1="26" x2="26" y2="22" stroke="#22c55e" strokeWidth="4.2" />
+          </g>
+        )}
+
+        {note.accidental === "b" && (
+          <g transform={`translate(152 ${y - 20})`}>
+            <line x1="8" y1="0" x2="8" y2="38" stroke="#ff4d4f" strokeWidth="4.4" />
+            <path d="M8 14 C19 8, 21 18, 8 22" fill="none" stroke="#ff4d4f" strokeWidth="4.4" />
+            <path d="M8 23 C19 17, 21 28, 8 31" fill="none" stroke="#ff4d4f" strokeWidth="4.4" />
+          </g>
+        )}
+
+        <ellipse
+          cx="205"
+          cy={y}
+          rx={boss ? 16 : 20}
+          ry={boss ? 11 : 13}
+          fill={color}
+          stroke="white"
+          strokeWidth="2.2"
+          transform={`rotate(-18 205 ${y})`}
+        />
+        {stemUp ? (
+          <line x1="220" x2="220" y1={y} y2={Math.max(-12, y - 40)} stroke={color} strokeWidth="3.4" />
+        ) : (
+          <line x1="190" x2="190" y1={y} y2={Math.min(146, y + 40)} stroke={color} strokeWidth="3.4" />
+        )}
       </svg>
     </div>
   );
@@ -527,26 +600,36 @@ export default function MusicInvadersApp() {
     });
   };
 
+  const moveLeft = () => {
+    if (gameState !== "playing") return;
+    if (soundOn) beep("thruster");
+    setShipLane((lane) => {
+      const next = clamp(lane - 1, 0, LANES - 1);
+      addTrail(next);
+      return next;
+    });
+  };
+
+  const moveRight = () => {
+    if (gameState !== "playing") return;
+    if (soundOn) beep("thruster");
+    setShipLane((lane) => {
+      const next = clamp(lane + 1, 0, LANES - 1);
+      addTrail(next);
+      return next;
+    });
+  };
+
   useEffect(() => {
     const onKeyDown = (event) => {
       if (event.key === "ArrowLeft") {
         event.preventDefault();
-        if (soundOn) beep("thruster");
-        setShipLane((lane) => {
-          const next = clamp(lane - 1, 0, LANES - 1);
-          addTrail(next);
-          return next;
-        });
+        moveLeft();
         return;
       }
       if (event.key === "ArrowRight") {
         event.preventDefault();
-        if (soundOn) beep("thruster");
-        setShipLane((lane) => {
-          const next = clamp(lane + 1, 0, LANES - 1);
-          addTrail(next);
-          return next;
-        });
+        moveRight();
         return;
       }
       if (gameState !== "playing") return;
@@ -797,7 +880,7 @@ export default function MusicInvadersApp() {
                   </div>
                   <div style={{ position: "relative", height: 580, overflow: "hidden", borderRadius: 24, border: "1px solid rgba(255,255,255,0.12)", background: "radial-gradient(circle at 50% 20%, rgba(56,189,248,0.25), transparent 30%), radial-gradient(circle at 80% 0%, rgba(168,85,247,0.25), transparent 30%), linear-gradient(180deg, rgba(15,23,42,1), rgba(2,6,23,1))", transform: shake ? "translateX(4px)" : "translateX(0)", transition: "transform 0.08s ease" }}>
                     {starsBg.near.slice(0, 18).map((s) => <div key={`board-star-${s.id}`} style={{ position: "absolute", left: `${(s.left * 0.9) + 5}%`, top: `${(s.top * 0.45) + 2}%`, width: Math.max(1, s.size * 0.8), height: Math.max(1, s.size * 0.8), borderRadius: 999, background: "white", opacity: 0.45 }} />)}{shootingStars.map((s) => <div key={`monitor-star-${s.id}`} style={{ position: "absolute", left: `${s.left}%`, top: `${s.top}%`, width: s.length, height: 3, background: "linear-gradient(90deg, rgba(255,255,255,1), rgba(255,255,255,0))", boxShadow: "0 0 8px rgba(255,255,255,0.8)", transform: `rotate(${s.angle}deg)`, opacity: 0.8, pointerEvents: "none" }} />)}{Array.from({ length: LANES }).map((_, i) => <div key={i} style={{ position: "absolute", top: 0, height: "100%", left: `${10 + i * 18}%`, width: "18%", borderLeft: "1px dashed rgba(255,255,255,0.12)" }} />)}
-                    {invaders.map((inv) => <div key={inv.id} style={{ position: "absolute", top: `${inv.y}%`, left: `${inv.isBoss ? 31 : LANE_LEFT[inv.lane]}%`, width: inv.isBoss ? "38%" : "18%" }}><div style={{ borderRadius: 24, border: inv.isBoss ? "1px solid rgba(252,211,77,0.55)" : "1px solid rgba(232,121,249,0.4)", padding: 12, background: inv.isBoss ? "rgba(245,158,11,0.10)" : "rgba(217,70,239,0.10)", boxShadow: "0 8px 24px rgba(0,0,0,0.25)" }}><Staff note={inv.question.display} clef={inv.question.clef} boss={Boolean(inv.isBoss)} /><div style={{ marginTop: 10, textAlign: "center", textTransform: "uppercase", letterSpacing: 3, color: inv.isBoss ? "#fde68a" : "#f0abfc", fontSize: inv.isBoss ? 12 : 12 }}>{inv.isBoss ? `${inv.question.clef} clef · ${inv.hp} hits left` : `${inv.question.clef} clef`}</div></div></div>)}
+                    {invaders.map((inv) => <div key={inv.id} style={{ position: "absolute", top: `${inv.isBoss ? Math.max(6, inv.y) : inv.y}%`, left: `${inv.isBoss ? 31 : LANE_LEFT[inv.lane]}%`, width: inv.isBoss ? "38%" : "18%" }}><div style={{ borderRadius: 24, border: inv.isBoss ? "1px solid rgba(252,211,77,0.55)" : "1px solid rgba(232,121,249,0.4)", padding: inv.isBoss ? 8 : 12, overflow: "hidden", background: inv.isBoss ? "rgba(245,158,11,0.10)" : "rgba(217,70,239,0.10)", boxShadow: "0 8px 24px rgba(0,0,0,0.25)" }}><Staff note={inv.question.display} clef={inv.question.clef} boss={Boolean(inv.isBoss)} /><div style={{ marginTop: 8, textAlign: "center", textTransform: "uppercase", letterSpacing: 2.2, color: inv.isBoss ? "#fde68a" : "#f0abfc", fontSize: inv.isBoss ? 11 : 12 }}>{inv.isBoss ? `${inv.question.clef} clef · ${inv.hp} hits left` : `${inv.question.clef} clef`}</div></div></div>)}
                     {shots.map((shot) => <div key={shot.id} style={{ position: "absolute", top: `${shot.y}%`, left: `${SHIP_LEFT[shot.lane]}%`, width: 40, height: 48, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 999, background: "#34d399", color: "#0f172a", fontWeight: 900, boxShadow: "0 10px 20px rgba(0,0,0,0.25)" }}>{shot.answer}</div>)}
                     {explosions.map((b) => <div key={b.id} style={{ position: "absolute", left: `${SHIP_LEFT[b.lane] + 1}%`, top: `${b.y}%`, width: 64, height: 64, transform: "translate(-50%,-50%)", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 999, border: b.success ? "1px solid rgba(134,239,172,0.7)" : "1px solid rgba(253,164,175,0.7)", background: b.success ? "rgba(74,222,128,0.25)" : "rgba(251,113,133,0.25)", color: b.success ? "#dcfce7" : "#ffe4e6", fontSize: 26, fontWeight: 900 }}>{b.label}</div>)}
                     <div style={{ position: "absolute", bottom: 8, left: `${50 + (shipLane - 2) * 18}%`, transform: "translateX(-50%)" }}>
@@ -807,6 +890,27 @@ export default function MusicInvadersApp() {
                   </div>
                 </div>
 
+                <div style={{ display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    style={{ ...styles.ghostButton, minWidth: 140, fontSize: 18, fontWeight: 800, padding: "14px 18px" }}
+                    onClick={moveLeft}
+                    onTouchStart={(e) => { e.preventDefault(); moveLeft(); }}
+                  >
+                    ⬅ Move left
+                  </button>
+                  <button
+                    type="button"
+                    style={{ ...styles.ghostButton, minWidth: 140, fontSize: 18, fontWeight: 800, padding: "14px 18px" }}
+                    onClick={moveRight}
+                    onTouchStart={(e) => { e.preventDefault(); moveRight(); }}
+                  >
+                    Move right ➡
+                  </button>
+                </div>
+                <div style={{ display: "flex", justifyContent: "center", marginTop: -4, color: "rgba(255,255,255,0.72)", fontSize: 12 }}>
+                  Tablet controls
+                </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
                   {answers.map((a) => <button key={a} style={styles.button} onClick={() => fireAnswer(a)}>{a}</button>)}
                 </div>
