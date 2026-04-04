@@ -455,6 +455,7 @@ export default function MusicInvadersApp() {
   const shootingRef = useRef(null);
   const cameraRef = useRef(null);
   const moveRepeatRef = useRef(null);
+  const moveHoldDelayRef = useRef(null);
 
   const level = useMemo(() => LEVELS.find((item) => item.key === levelKey) || LEVELS[0], [levelKey]);
   const questions = useMemo(() => getQuestions(levelKey, clefMode, selectedPracticeNotes), [levelKey, clefMode, selectedPracticeNotes]);
@@ -619,6 +620,10 @@ export default function MusicInvadersApp() {
   };
 
   const stopMoveRepeat = () => {
+    if (moveHoldDelayRef.current) {
+      clearTimeout(moveHoldDelayRef.current);
+      moveHoldDelayRef.current = null;
+    }
     if (moveRepeatRef.current) {
       clearInterval(moveRepeatRef.current);
       moveRepeatRef.current = null;
@@ -630,10 +635,12 @@ export default function MusicInvadersApp() {
     stopMoveRepeat();
     if (direction === "left") moveLeft();
     if (direction === "right") moveRight();
-    moveRepeatRef.current = setInterval(() => {
-      if (direction === "left") moveLeft();
-      if (direction === "right") moveRight();
-    }, 140);
+    moveHoldDelayRef.current = setTimeout(() => {
+      moveRepeatRef.current = setInterval(() => {
+        if (direction === "left") moveLeft();
+        if (direction === "right") moveRight();
+      }, 180);
+    }, 260);
   };
 
   useEffect(() => {
@@ -936,25 +943,21 @@ export default function MusicInvadersApp() {
                 <div style={{ display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
                   <button
                     type="button"
-                    style={{ ...styles.ghostButton, minWidth: 140, fontSize: 18, fontWeight: 800, padding: "14px 18px" }}
-                    onMouseDown={() => startMoveRepeat("left")}
-                    onMouseUp={stopMoveRepeat}
-                    onMouseLeave={stopMoveRepeat}
-                    onTouchStart={(e) => { e.preventDefault(); startMoveRepeat("left"); }}
-                    onTouchEnd={stopMoveRepeat}
-                    onTouchCancel={stopMoveRepeat}
+                    style={{ ...styles.ghostButton, minWidth: 140, fontSize: 18, fontWeight: 800, padding: "14px 18px", touchAction: "none", userSelect: "none" }}
+                    onPointerDown={(e) => { e.preventDefault(); startMoveRepeat("left"); }}
+                    onPointerUp={stopMoveRepeat}
+                    onPointerCancel={stopMoveRepeat}
+                    onPointerLeave={stopMoveRepeat}
                   >
                     ⬅ Move left
                   </button>
                   <button
                     type="button"
-                    style={{ ...styles.ghostButton, minWidth: 140, fontSize: 18, fontWeight: 800, padding: "14px 18px" }}
-                    onMouseDown={() => startMoveRepeat("right")}
-                    onMouseUp={stopMoveRepeat}
-                    onMouseLeave={stopMoveRepeat}
-                    onTouchStart={(e) => { e.preventDefault(); startMoveRepeat("right"); }}
-                    onTouchEnd={stopMoveRepeat}
-                    onTouchCancel={stopMoveRepeat}
+                    style={{ ...styles.ghostButton, minWidth: 140, fontSize: 18, fontWeight: 800, padding: "14px 18px", touchAction: "none", userSelect: "none" }}
+                    onPointerDown={(e) => { e.preventDefault(); startMoveRepeat("right"); }}
+                    onPointerUp={stopMoveRepeat}
+                    onPointerCancel={stopMoveRepeat}
+                    onPointerLeave={stopMoveRepeat}
                   >
                     Move right ➡
                   </button>
